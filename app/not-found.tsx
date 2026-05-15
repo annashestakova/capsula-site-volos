@@ -1,11 +1,22 @@
 "use client";
 
+import React from "react";
+
 import Link from "next/link";
 import { motion } from "framer-motion";
-import LottieWidget from "@/components/LottieWidget";
-import pinkCatData from "@/public/lottie/pink-cat.json";
+import dynamic from "next/dynamic";
+
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 export default function NotFound() {
+  const [animData, setAnimData] = React.useState(null);
+
+  React.useEffect(() => {
+    fetch("/lottie/pink-cat.json")
+      .then((r) => r.json())
+      .then(setAnimData);
+  }, []);
+
   return (
     <main className="min-h-screen bg-[#FAF7F2] dark:bg-[#1a1210] flex flex-col items-center justify-center px-4 text-center overflow-hidden">
       <motion.p
@@ -20,9 +31,9 @@ export default function NotFound() {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, delay: 0.2 }}
-        className="-mt-8 relative z-10"
+        className="-mt-8 relative z-10 w-[300px] h-[300px] md:w-[400px] md:h-[400px]"
       >
-        <LottieWidget src={pinkCatData} size="lg" label="розовый кот" scrollReveal={false} />
+        {animData && <Lottie animationData={animData} loop autoplay style={{ width: "100%", height: "100%" }} />}
       </motion.div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
