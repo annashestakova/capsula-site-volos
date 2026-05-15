@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { BLOG_POSTS } from "./blog/page";
+import { BLOG_POSTS } from "./blog/data";
 
 const BASE_URL = "https://capsula-site.vercel.app";
 

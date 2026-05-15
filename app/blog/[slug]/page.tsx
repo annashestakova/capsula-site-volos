@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import Link from "next/link";
 
-export const BLOG_POSTS = [
+const BLOG_POSTS = [
   { slug: "kapsulyarnoe-narashchivanie-chto-eto", title: "Капсульное наращивание волос: что это, как держится и сколько стоит", description: "Разбираю самый популярный метод: горячий кератин, сколько капсул нужно, как долго держится.", date: "2025-04-10", tag: "Капсульное", readTime: "5 мин", popular: true },
   { slug: "bioproteinovye-volosy-novoe-pokolenie", title: "Биопротеиновые волосы нового поколения: без ламинирования и кератина", description: "Почему биопротеин — лучший выбор для пористых волос. Не требует кератинового ламинирования.", date: "2025-04-18", tag: "Биопротеин", readTime: "4 мин", popular: true },
   { slug: "skolko-kapsul-nuzhno", title: "Сколько капсул нужно для наращивания: полный расчёт по типу волос", description: "50 или 300 капсул? Объясняю как рассчитать количество для загущения, удлинения и коррекции.", date: "2025-05-01", tag: "Калькулятор", readTime: "6 мин", popular: true },
