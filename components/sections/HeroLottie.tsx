@@ -11,14 +11,14 @@ export default function HeroLottie() {
   useEffect(() => {
     fetch("/lottie/summer-breeze.json")
       .then((r) => r.json())
-      .then(setData)
+      .then((d) => setData(d))
       .catch(() => {});
   }, []);
 
   if (!data) return null;
 
   return (
-    <div className="hidden lg:block absolute right-0 top-1/2 -translate-y-1/2 w-[420px] h-[420px] opacity-60 pointer-events-none">
+    <div className="absolute right-4 top-1/2 -translate-y-1/2 w-[360px] h-[360px] opacity-70 pointer-events-none z-20">
       <Lottie animationData={data} loop autoplay style={{ width: "100%", height: "100%" }} />
     </div>
   );
