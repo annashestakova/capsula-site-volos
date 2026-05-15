@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Jost, Playfair_Display } from "next/font/google";
 import "../styles/globals.css";
 
@@ -26,19 +26,11 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: "Volos Capsula – Наращивание волос в Бресте и Минске",
+    default: "Volos Capsula — Наращивание волос в Бресте и Минске",
     template: "%s | Volos Capsula",
   },
-  description:
-    "Профессиональное капсульное наращивание волос в Бресте и Минске. Мастер Анна — 5 лет опыта, натуральный славянский волос, ИИ-консультация, расчёт стоимости онлайн.",
-  keywords: [
-    "наращивание волос Брест",
-    "наращивание волос Минск",
-    "капсульное наращивание",
-    "биопротеин волосы",
-    "мастер наращивание Брест",
-    "volos capsula",
-  ],
+  description: "Профессиональное капсульное наращивание волос в Бресте и Минске. Мастер Анна — 5 лет опыта, натуральный славянский волос, ИИ-консультация, расчёт стоимости онлайн.",
+  keywords: ["наращивание волос Брест", "наращивание волос Минск", "капсульное наращивание", "биопротеин волосы", "мастер наращивание Брест", "volos capsula"],
   openGraph: {
     type: "website",
     locale: "ru_RU",
@@ -47,10 +39,31 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" className={`${cormorant.variable} ${jost.variable} ${playfair.variable}`}>
       <body className="grain-overlay">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "LocalBusiness",
+              name: "Volos Capsula",
+              description: "Профессиональное капсульное и биопротеиновое наращивание волос.",
+              address: { "@type": "PostalAddress", addressLocality: "Брест", addressCountry: "BY" },
+              areaServed: ["Брест", "Минск"],
+              priceRange: "от 160 BYN",
+              sameAs: ["https://www.instagram.com/volos_capsula/", "https://t.me/haircapsula_bot"],
+            }),
+          }}
+        />
         {children}
       </body>
     </html>
