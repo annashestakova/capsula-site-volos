@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
+import HeroLottie from "@/components/sections/HeroLottie";
 
 const floatVariants = {
   animate: (i: number) => ({
@@ -61,6 +62,7 @@ export default function HeroSection() {
         </svg>
       </motion.div>
 
+      <HeroLottie />
       <div className="container-site relative z-10">
         <div className="max-w-4xl">
           {/* Badge */}
