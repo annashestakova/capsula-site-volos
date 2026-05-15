@@ -1,6 +1,6 @@
 // app/sitemap.ts
 import { MetadataRoute } from "next";
-import { BLOG_POSTS } from "./blog/page";
+import { BLOG_POSTS } from "./blog/data";
 
 const BASE_URL = "https://volos-capsula.by"; // ← замени на свой домен когда купишь
 
