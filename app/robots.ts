@@ -1,6 +1,7 @@
+// app/robots.ts
 import { MetadataRoute } from "next";
 
-const BASE_URL = "https://capsula-site.vercel.app";
+const BASE_URL = "https://volos-capsula.by"; // ← замени на свой домен
 
 export default function robots(): MetadataRoute.Robots {
   return {

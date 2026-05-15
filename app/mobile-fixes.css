@@ -1,30 +1,41 @@
+/* globals.css — добавь в конец существующего файла */
+
+/* ─── Мобильные фиксы ─────────────────────────────────────── */
+
+/* Убрать горизонтальный скролл */
 html, body {
   overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
 }
 
-html {
-  scroll-behavior: smooth;
+/* Минимальные touch-цели для кнопок */
+button, a {
+  min-height: 44px;
+  min-width: 44px;
 }
 
-::selection {
-  background-color: #E8C4B8;
-  color: #3D2B1F;
+/* Исключение для текстовых ссылок */
+p a, li a {
+  min-height: auto;
+  min-width: auto;
 }
 
-*:focus-visible {
-  outline: 2px solid #C9897A;
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
+/* ─── Адаптив Hero секции ─────────────────────────────────── */
 @media (max-width: 768px) {
+  /* Убираем лишние отступы на мобиле */
   .hero-section {
     padding-left: 1rem;
     padding-right: 1rem;
     padding-top: 6rem;
   }
 
+  /* Уменьшаем большие заголовки */
+  .hero-title {
+    font-size: clamp(2.5rem, 10vw, 5rem);
+    line-height: 1.1;
+  }
+
+  /* Стекирование flex-элементов */
   .hero-cta {
     flex-direction: column;
     gap: 0.75rem;
@@ -37,12 +48,18 @@ html {
   }
 }
 
+/* ─── Карточки услуг ──────────────────────────────────────── */
 @media (max-width: 640px) {
   .services-grid {
     grid-template-columns: 1fr;
   }
+
+  .service-card {
+    padding: 1.25rem;
+  }
 }
 
+/* ─── Калькулятор (исправить неровности) ─────────────────── */
 @media (max-width: 768px) {
   .calculator-container {
     padding: 1rem;
@@ -52,25 +69,46 @@ html {
     grid-template-columns: 1fr;
     gap: 0.75rem;
   }
+
+  .calculator-option {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
 }
 
+/* ─── Навигация ───────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .desktop-nav {
+    display: none;
+  }
+}
+
+/* ─── Lottie-анимации: ограничить размер на мобиле ───────── */
 @media (max-width: 768px) {
   .lottie-hero {
     width: 200px !important;
     height: 200px !important;
   }
 
+  .lottie-section {
+    width: 160px !important;
+    height: 160px !important;
+  }
+
+  /* Скрыть декоративные Lottie на маленьких экранах */
   .lottie-decorative-desktop {
     display: none;
   }
 }
 
+/* ─── Сетка портфолио ─────────────────────────────────────── */
 @media (max-width: 480px) {
   .portfolio-grid {
     columns: 1 !important;
   }
 }
 
+/* ─── Footer ─────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .footer-grid {
     grid-template-columns: 1fr !important;
@@ -78,6 +116,26 @@ html {
   }
 }
 
+/* ─── Общие утилиты ───────────────────────────────────────── */
+/* Плавный скролл */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Фокус-кольцо для accessibility */
+*:focus-visible {
+  outline: 2px solid #C9897A;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Выделение текста в цвет бренда */
+::selection {
+  background-color: #E8C4B8;
+  color: #3D2B1F;
+}
+
+/* ─── Lottie — системный класс для позиционирования ──────── */
 .lottie-bg {
   position: absolute;
   inset: 0;

@@ -1,24 +1,37 @@
 "use client";
 
-import React from "react";
-
 import Link from "next/link";
 import { motion } from "framer-motion";
-import dynamic from "next/dynamic";
-
-const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
+import LottieWidget from "@/components/LottieWidget";
+// @ts-ignore
+import pinkCatData from "@/public/lottie/pink-cat.json";
 
 export default function NotFound() {
-  const [animData, setAnimData] = React.useState(null);
-
-  React.useEffect(() => {
-    fetch("/lottie/pink-cat.json")
-      .then((r) => r.json())
-      .then(setAnimData);
-  }, []);
-
   return (
     <main className="min-h-screen bg-[#FAF7F2] dark:bg-[#1a1210] flex flex-col items-center justify-center px-4 text-center overflow-hidden">
+      {/* Звёзды-фон */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {Array.from({ length: 24 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full bg-[#B8AECF]"
+            style={{
+              width: Math.random() * 3 + 1,
+              height: Math.random() * 3 + 1,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+            }}
+            animate={{ opacity: [0.2, 1, 0.2] }}
+            transition={{
+              duration: Math.random() * 3 + 2,
+              repeat: Infinity,
+              delay: Math.random() * 3,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* 404 */}
       <motion.p
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -27,14 +40,22 @@ export default function NotFound() {
       >
         404
       </motion.p>
+
+      {/* Кот Lottie */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, delay: 0.2 }}
-        className="-mt-8 relative z-10 w-[300px] h-[300px] md:w-[400px] md:h-[400px]"
+        className="-mt-8 relative z-10"
       >
-        {animData && <Lottie animationData={animData} loop autoplay style={{ width: "100%", height: "100%" }} />}
+        <LottieWidget
+          src={pinkCatData}
+          size="lg"
+          label="розовый кот"
+          scrollReveal={false}
+        />
       </motion.div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -46,12 +67,21 @@ export default function NotFound() {
         </h1>
         <p className="font-[Jost] text-[#3D2B1F]/60 dark:text-[#FAF7F2]/60 mb-8 max-w-sm mx-auto">
           Этот кот знает, где она — но не скажет.
+          <br />
+          Попробуйте вернуться назад или на главную.
         </p>
+
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/" className="px-6 py-3 rounded-full bg-[#C9897A] text-white font-[Jost] text-sm hover:bg-[#b87a6c] transition-colors">
+          <Link
+            href="/"
+            className="px-6 py-3 rounded-full bg-[#C9897A] text-white font-[Jost] text-sm hover:bg-[#b87a6c] transition-colors"
+          >
             На главную
           </Link>
-          <Link href="/services" className="px-6 py-3 rounded-full border border-[#3D2B1F]/20 text-[#3D2B1F] dark:text-[#FAF7F2] font-[Jost] text-sm hover:border-[#C9897A] hover:text-[#C9897A] transition-colors">
+          <Link
+            href="/services"
+            className="px-6 py-3 rounded-full border border-[#3D2B1F]/20 dark:border-[#FAF7F2]/20 text-[#3D2B1F] dark:text-[#FAF7F2] font-[Jost] text-sm hover:border-[#C9897A] hover:text-[#C9897A] transition-colors"
+          >
             Услуги и цены
           </Link>
         </div>
