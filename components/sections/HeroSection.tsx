@@ -7,8 +7,6 @@ import LottiePlayer from "@/components/LottiePlayer";
 const floats = [
   { top: "12%", left: "6%",  size: 18, delay: 0,   dur: 5.5 },
   { top: "72%", left: "8%",  size: 14, delay: 1.2, dur: 7   },
-  { top: "18%", right: "4%", size: 16, delay: 0.6, dur: 6   },
-  { top: "68%", right: "6%", size: 12, delay: 2,   dur: 8   },
   { top: "44%", left: "3%",  size: 10, delay: 1.8, dur: 6.5 },
 ];
 
@@ -26,19 +24,18 @@ export default function HeroSection() {
       className="relative min-h-screen overflow-hidden"
       style={{ background: "linear-gradient(135deg, #FDF8F4 0%, #F9EEF5 50%, #F4EEF9 100%)" }}
     >
-      {/* Ambient glow blobs */}
+      {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute top-1/4 left-1/4 w-[50vw] h-[40vw] rounded-full bg-pink-200/30 blur-[100px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[35vw] h-[35vw] rounded-full bg-purple-200/20 blur-[80px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[30vw] rounded-full bg-rose-100/20 blur-[60px]" />
       </div>
 
-      {/* Floating hearts */}
+      {/* Floating hearts — left side only */}
       {floats.map((f, i) => (
         <motion.div
           key={i}
           className="pointer-events-none absolute text-pink-300/40"
-          style={{ top: f.top, left: (f as any).left, right: (f as any).right }}
+          style={{ top: f.top, left: (f as any).left }}
           animate={{ y: [0, -f.size * 0.9, 0], rotate: [0, i % 2 === 0 ? 8 : -6, 0] }}
           transition={{ duration: f.dur, repeat: Infinity, ease: "easeInOut", delay: f.delay }}
         >
@@ -46,9 +43,46 @@ export default function HeroSection() {
         </motion.div>
       ))}
 
-      <div className="container-site relative z-10 min-h-screen grid grid-cols-1 lg:grid-cols-2 gap-8 items-center pt-28 pb-16 px-6 sm:px-10">
-        {/* ── Left: text ── */}
-        <div className="order-2 lg:order-1">
+      {/* ── Girl lottie — absolute top-right ── */}
+      <motion.div
+        className="pointer-events-none absolute right-0 top-16 z-0"
+        initial={{ opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 1.0, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      >
+        {/* Glow behind */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-[70%] h-[70%] rounded-full bg-pink-200/40 blur-[60px]" />
+        </div>
+        <LottiePlayer
+          src="/lottie/fashionable-girl-red-dress.json"
+          className="w-[260px] sm:w-[340px] md:w-[420px] lg:w-[520px] xl:w-[580px]"
+          ariaLabel="девушка с красивыми волосами"
+          speed={0.8}
+        />
+        {/* Sparkles around girl */}
+        {[
+          { top: "8%",  left: "6%",  s: 14, d: 0   },
+          { top: "75%", left: "12%", s: 10, d: 1.5 },
+          { top: "12%", right: "4%", s: 12, d: 0.8 },
+          { top: "70%", right: "8%", s: 8,  d: 2.2 },
+        ].map((p, i) => (
+          <motion.svg
+            key={i}
+            width={p.s} height={p.s} viewBox="0 0 24 24" fill="#f9a8d4"
+            className="absolute pointer-events-none"
+            style={{ top: p.top, left: (p as any).left, right: (p as any).right }}
+            animate={{ opacity: [0.3, 0.9, 0.3], scale: [0.8, 1.3, 0.8] }}
+            transition={{ duration: 2.5 + i * 0.4, repeat: Infinity, delay: p.d }}
+          >
+            <path d="M12 2l2.4 7.4L22 12l-7.6 2.6L12 22l-2.4-7.4L2 12l7.6-2.6z" />
+          </motion.svg>
+        ))}
+      </motion.div>
+
+      {/* ── Text content ── */}
+      <div className="relative z-10 min-h-screen flex flex-col justify-center pt-28 pb-16 px-6 sm:px-10 lg:px-16">
+        <div className="max-w-lg">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -133,9 +167,9 @@ export default function HeroSection() {
             className="flex gap-8 pt-8 border-t border-pink-200/40"
           >
             {[
-              { n: "5+",   l: "лет опыта" },
-              { n: "300+", l: "клиенток" },
-              { n: "4 мес", l: "носки" },
+              { n: "5+",    l: "лет опыта" },
+              { n: "300+",  l: "клиенток"  },
+              { n: "4 мес", l: "носки"     },
             ].map((s) => (
               <div key={s.l}>
                 <div className="font-display text-2xl font-light text-rose leading-none">{s.n}</div>
@@ -155,7 +189,7 @@ export default function HeroSection() {
               href="https://instagram.com/volos_capsula"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 bg-white/70 hover:bg-white border border-pink-200/50 rounded-2xl transition-colors group"
+              className="flex items-center gap-2 px-4 py-2 bg-white/70 hover:bg-white border border-pink-200/50 rounded-2xl transition-colors"
             >
               <Instagram size={15} className="text-rose" />
               <span className="font-body text-xs text-espresso/80 font-medium">@volos_capsula</span>
@@ -171,43 +205,6 @@ export default function HeroSection() {
             </a>
           </motion.div>
         </div>
-
-        {/* ── Right: Lottie girl ── */}
-        <motion.div
-          className="order-1 lg:order-2 relative flex items-center justify-center"
-          initial={{ opacity: 0, scale: 0.95, x: 30 }}
-          animate={{ opacity: 1, scale: 1, x: 0 }}
-          transition={{ duration: 1.0, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-        >
-          {/* Glow behind lottie */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-[70%] h-[70%] rounded-full bg-pink-200/40 blur-[60px]" />
-          </div>
-          <LottiePlayer
-            src="/lottie/fashionable-girl-red-dress.json"
-            className="relative z-10 w-full max-w-[340px] sm:max-w-[420px] lg:max-w-[500px] mx-auto"
-            ariaLabel="девушка с красивыми волосами"
-            speed={0.8}
-          />
-          {/* Decorative sparkles around lottie */}
-          {[
-            { top: "10%", left: "8%",  s: 14, d: 0   },
-            { top: "80%", left: "15%", s: 10, d: 1.5 },
-            { top: "15%", right: "6%", s: 12, d: 0.8 },
-            { top: "75%", right: "10%",s: 8,  d: 2.2 },
-          ].map((p, i) => (
-            <motion.svg
-              key={i}
-              width={p.s} height={p.s} viewBox="0 0 24 24" fill="#f9a8d4"
-              className="absolute pointer-events-none"
-              style={{ top: p.top, left: (p as any).left, right: (p as any).right }}
-              animate={{ opacity: [0.3, 0.9, 0.3], scale: [0.8, 1.3, 0.8] }}
-              transition={{ duration: 2.5 + i * 0.4, repeat: Infinity, delay: p.d }}
-            >
-              <path d="M12 2l2.4 7.4L22 12l-7.6 2.6L12 22l-2.4-7.4L2 12l7.6-2.6z" />
-            </motion.svg>
-          ))}
-        </motion.div>
       </div>
 
       {/* Scroll indicator */}

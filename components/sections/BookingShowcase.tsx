@@ -11,54 +11,54 @@ const slides = [
     title: "Выберите услугу",
     text: "Капсульное, биопротеин, загущение или коррекция — выберите то, что вам нужно.",
     icon: Scissors,
-    lottieSrc: "/lottie/orange-cat-peeping.json",
-    lottieLabel: "кот выглядывает",
-    lottieClass: "h-[260px] max-w-[220px] lg:h-[300px] lg:max-w-[260px]",
-    speed: 0.9,
-    decoTop: "/lottie/fitting.json",
-    decoTopLabel: "примерка",
-    decoBottom: "/lottie/fashionable-girl-red-dress.json",
-    decoBottomLabel: "девушка",
   },
   {
     title: "Выберите время",
     text: "Откройте календарь — свободные слоты видно сразу. Нажмите на удобный день и час.",
     icon: CalendarCheck,
-    lottieSrc: "/lottie/location-search.json",
-    lottieLabel: "поиск локации",
-    lottieClass: "h-[240px] max-w-[320px] lg:h-[290px] lg:max-w-[360px]",
-    speed: 0.85,
-    decoTop: "/lottie/cat-love.json",
-    decoTopLabel: "котик",
-    decoBottom: "/lottie/summer-breeze.json",
-    decoBottomLabel: "лето",
   },
   {
     title: "Анна на связи",
     text: "Заявка уходит к мастеру. Анна проверит и лично подтвердит запись — обычно в тот же день.",
     icon: MessageCircle,
-    lottieSrc: "/lottie/travel.json",
-    lottieLabel: "машинка едет",
-    lottieClass: "h-[240px] max-w-[320px] lg:h-[280px] lg:max-w-[380px]",
+  },
+];
+
+// Only 2 animations, cycling sequentially one after another
+const ANIMS = [
+  {
+    src: "/lottie/fashionable-girl-red-dress.json",
+    label: "девушка",
+    className: "h-[360px] max-w-[300px] lg:h-[460px] lg:max-w-[380px]",
+    speed: 0.8,
+  },
+  {
+    src: "/lottie/travel.json",
+    label: "машинка едет",
+    className: "h-[300px] max-w-[380px] lg:h-[380px] lg:max-w-[460px]",
     speed: 0.78,
-    decoTop: "/lottie/pink-cat.json",
-    decoTopLabel: "розовый котик",
-    decoBottom: "/lottie/orange-cat-peeping.json",
-    decoBottomLabel: "кот",
   },
 ];
 
 export default function BookingShowcase() {
   const [active, setActive] = useState(0);
+  const [animIndex, setAnimIndex] = useState(0);
   const slide = slides[active];
   const Icon = slide.icon;
+  const anim = ANIMS[animIndex];
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setActive((current) => (current + 1) % slides.length);
+    const slideTimer = window.setInterval(() => {
+      setActive((c) => (c + 1) % slides.length);
     }, 5200);
+    return () => window.clearInterval(slideTimer);
+  }, []);
 
-    return () => window.clearInterval(timer);
+  useEffect(() => {
+    const animTimer = window.setInterval(() => {
+      setAnimIndex((c) => (c + 1) % ANIMS.length);
+    }, 4000);
+    return () => window.clearInterval(animTimer);
   }, []);
 
   return (
@@ -126,62 +126,22 @@ export default function BookingShowcase() {
                 </Link>
               </div>
             </div>
-            <div className="relative min-h-[340px] lg:min-h-[420px]" aria-hidden="true">
+            <div className="relative min-h-[380px] lg:min-h-[480px]" aria-hidden="true">
               <div className="absolute inset-6 rounded-full bg-blush/10 blur-3xl" />
-
-              {/* Deco top-right — switches with slide */}
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={`decoTop-${active}`}
-                  initial={{ opacity: 0, scale: 0.7, x: 20 }}
-                  animate={{ opacity: 1, scale: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.7, x: 20 }}
-                  transition={{ duration: 0.4 }}
-                  className="absolute top-0 right-0 z-20 w-24 h-24 lg:w-32 lg:h-32 pointer-events-none"
-                >
-                  <LottiePlayer
-                    src={slide.decoTop}
-                    className="w-full h-full opacity-80"
-                    ariaLabel={slide.decoTopLabel}
-                    speed={0.9}
-                  />
-                </motion.div>
-              </AnimatePresence>
-
-              {/* Main lottie — center */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={slide.lottieSrc}
-                  initial={{ opacity: 0, y: 18, scale: 0.96 }}
+                  key={anim.src}
+                  initial={{ opacity: 0, y: 24, scale: 0.93 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -18, scale: 0.96 }}
-                  transition={{ duration: 0.35 }}
-                  className="relative z-10 flex min-h-[340px] items-center justify-center lg:min-h-[420px]"
+                  exit={{ opacity: 0, y: -24, scale: 0.93 }}
+                  transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                  className="relative z-10 flex min-h-[380px] items-center justify-center lg:min-h-[480px]"
                 >
                   <LottiePlayer
-                    src={slide.lottieSrc}
-                    className={`pointer-events-none mx-auto w-full ${slide.lottieClass}`}
-                    ariaLabel={slide.lottieLabel}
-                    speed={slide.speed}
-                  />
-                </motion.div>
-              </AnimatePresence>
-
-              {/* Deco bottom-left — switches with slide */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={`decoBottom-${active}`}
-                  initial={{ opacity: 0, scale: 0.7, x: -20 }}
-                  animate={{ opacity: 1, scale: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.7, x: -20 }}
-                  transition={{ duration: 0.4 }}
-                  className="absolute bottom-0 left-0 z-20 w-24 h-24 lg:w-32 lg:h-32 pointer-events-none"
-                >
-                  <LottiePlayer
-                    src={slide.decoBottom}
-                    className="w-full h-full opacity-70"
-                    ariaLabel={slide.decoBottomLabel}
-                    speed={0.85}
+                    src={anim.src}
+                    className={`pointer-events-none mx-auto w-full ${anim.className}`}
+                    ariaLabel={anim.label}
+                    speed={anim.speed}
                   />
                 </motion.div>
               </AnimatePresence>
