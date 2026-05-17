@@ -34,9 +34,9 @@ export default function BookingFooterSection() {
       {/* Girl walking lottie — left */}
       <div className="absolute left-0 bottom-0 pointer-events-none">
         <LottiePlayer
-          src="/lottie/Travel is fun.json"
+          src="/lottie/fashionable-girl-red-dress.json"
           className="h-64 w-64 opacity-20 sm:h-80 sm:w-80 sm:opacity-30"
-          ariaLabel="путешествие"
+          ariaLabel="девушка"
           speed={0.75}
         />
       </div>
