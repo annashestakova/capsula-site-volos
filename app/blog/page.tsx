@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { BLOG_POSTS } from "./data";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 
 const TAG_COLORS: Record<string, string> = {
   "Капсульное": "bg-blush text-espresso",
@@ -17,6 +19,8 @@ export default function BlogPage() {
   const featured = BLOG_POSTS.filter((p) => p.popular);
   const rest = BLOG_POSTS.filter((p) => !p.popular);
   return (
+    <>
+    <Header />
     <main className="min-h-screen bg-cream pt-24 md:pt-28 pb-20 px-4">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="max-w-5xl mx-auto text-center mb-14">
         <p className="text-sm uppercase tracking-widest text-rose mb-3 font-body">Блог</p>
@@ -68,5 +72,7 @@ export default function BlogPage() {
         <a href="https://t.me/haircapsula_bot" target="_blank" rel="noopener noreferrer" className="btn-primary">Открыть Telegram-бот →</a>
       </motion.div>
     </main>
+    <Footer />
+    </>
   );
 }

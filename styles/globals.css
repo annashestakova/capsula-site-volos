@@ -92,4 +92,130 @@
   /* Section padding */
   .section-padding { @apply py-20 md:py-32; }
   .container-site { @apply max-w-7xl mx-auto px-6 md:px-10; }
+
+  .portfolio-hearts {
+    position: absolute;
+    inset: 0;
+    height: 34rem;
+    pointer-events: none;
+    user-select: none;
+    z-index: 1;
+  }
+
+  .portfolio-heart {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transform: rotate(-10deg);
+    will-change: transform, opacity, filter;
+  }
+
+  .portfolio-heart--glow {
+    color: #D98294;
+    filter: drop-shadow(0 0 10px rgba(217, 130, 148, 0.42));
+    animation: portfolio-heart-glow 4.8s ease-in-out infinite;
+  }
+
+  .portfolio-heart--blink {
+    color: #C9897A;
+    animation: portfolio-heart-blink 2.6s ease-in-out infinite;
+  }
+
+  .portfolio-heart--soft {
+    color: #E8C4B8;
+    filter: drop-shadow(0 8px 18px rgba(201, 137, 122, 0.2));
+    animation: portfolio-heart-float 6.2s ease-in-out infinite;
+  }
+
+  .portfolio-heart--outline {
+    color: #B8AECF;
+    filter: drop-shadow(0 0 8px rgba(184, 174, 207, 0.32));
+    animation: portfolio-heart-drift 5.4s ease-in-out infinite;
+  }
+
+  .portfolio-work-card {
+    position: relative;
+    overflow: hidden;
+    background-position: center;
+    background-size: cover;
+  }
+
+  .portfolio-work-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.38), transparent 24%),
+      linear-gradient(135deg, rgba(250, 247, 242, 0.42), rgba(255, 255, 255, 0.04));
+    opacity: 0.7;
+    transition: opacity 300ms ease;
+  }
+
+  .portfolio-work-card:hover::before {
+    opacity: 0.24;
+  }
+}
+
+@keyframes portfolio-heart-glow {
+  0%, 100% {
+    opacity: 0.42;
+    transform: translate3d(0, 0, 0) rotate(-12deg) scale(1);
+    filter: drop-shadow(0 0 8px rgba(217, 130, 148, 0.28));
+  }
+  50% {
+    opacity: 0.98;
+    transform: translate3d(0, -12px, 0) rotate(8deg) scale(1.14);
+    filter: drop-shadow(0 0 18px rgba(217, 130, 148, 0.62));
+  }
+}
+
+@keyframes portfolio-heart-blink {
+  0%, 100% {
+    opacity: 0.22;
+    transform: translate3d(0, 0, 0) rotate(14deg) scale(0.92);
+  }
+  45%, 58% {
+    opacity: 0.9;
+    transform: translate3d(0, -6px, 0) rotate(-8deg) scale(1.08);
+  }
+}
+
+@keyframes portfolio-heart-float {
+  0%, 100% {
+    opacity: 0.46;
+    transform: translate3d(0, 0, 0) rotate(-18deg);
+  }
+  50% {
+    opacity: 0.78;
+    transform: translate3d(8px, -16px, 0) rotate(10deg);
+  }
+}
+
+@keyframes portfolio-heart-drift {
+  0%, 100% {
+    opacity: 0.34;
+    transform: translate3d(0, 0, 0) rotate(20deg);
+  }
+  50% {
+    opacity: 0.82;
+    transform: translate3d(-10px, -10px, 0) rotate(-12deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .portfolio-hearts {
+    height: 28rem;
+  }
+
+  .portfolio-heart:nth-child(n + 7) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-heart {
+    animation: none;
+  }
 }

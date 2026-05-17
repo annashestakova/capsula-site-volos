@@ -16,7 +16,7 @@ export default function CalculatorPage() {
         <div className="container-site pt-12 pb-4">
           <div className="max-w-xl">
             <p className="font-body text-sm text-rose font-medium tracking-widest uppercase mb-4">Калькулятор</p>
-            <h1 className="font-display text-6xl font-light text-espresso leading-tight">
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-light text-espresso leading-tight">
               Рассчитайте
               <br />
               <em className="italic text-rose">стоимость</em>

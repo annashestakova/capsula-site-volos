@@ -3,13 +3,15 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { CalendarCheck, Menu, X } from "lucide-react";
 
 const nav = [
   { href: "/",           label: "Главная" },
+  { href: "/booking",    label: "Запись" },
   { href: "/services",   label: "Услуги и цены" },
   { href: "/calculator", label: "Калькулятор" },
   { href: "/portfolio",  label: "Портфолио" },
+  { href: "/blog",       label: "Блог" },
   { href: "/about",      label: "О мастере" },
   { href: "/contacts",   label: "Контакты" },
 ];
@@ -72,14 +74,11 @@ export default function Header() {
           {/* CTA + burger */}
           <div className="flex items-center gap-3">
             <Link
-              href="https://t.me/volos_capsula"
-              target="_blank"
+              href="/booking"
               className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 bg-espresso text-cream text-sm font-body font-medium rounded-full hover:bg-rose transition-all duration-300 hover:scale-105"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.28 14.6l-2.95-.924c-.642-.204-.657-.642.136-.953l11.57-4.461c.537-.194 1.006.131.858.959z"/>
-              </svg>
-              Записаться
+              <CalendarCheck size={16} />
+              Выбрать время
             </Link>
             <button
               onClick={() => setOpen(true)}
@@ -138,11 +137,10 @@ export default function Header() {
               </nav>
               <div className="pt-8 border-t border-sand">
                 <Link
-                  href="https://t.me/volos_capsula"
-                  target="_blank"
+                  href="/booking"
                   className="btn-primary w-full justify-center"
                 >
-                  Записаться в Telegram
+                  Записаться онлайн
                 </Link>
                 <p className="text-center text-sm text-mink mt-4">
                   📍 Брест · Минск · онлайн

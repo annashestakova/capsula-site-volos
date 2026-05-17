@@ -1,7 +1,7 @@
 // app/robots.ts
 import { MetadataRoute } from "next";
 
-const BASE_URL = "https://volos-capsula.by"; // ← замени на свой домен
+const BASE_URL = "https://capssula.by";
 
 export default function robots(): MetadataRoute.Robots {
   return {

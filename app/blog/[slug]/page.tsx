@@ -47,7 +47,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
           <p className="font-body text-mink text-lg leading-relaxed">{post!.description}</p>
         </div>
         <div className="h-px bg-gradient-to-r from-blush via-rose/30 to-transparent mb-10" />
-        <div>{renderContent(post!.description)}</div>
+        <div>{renderContent(post!.content || post!.description)}</div>
         <div className="mt-14 p-6 rounded-3xl bg-espresso text-cream text-center">
           <p className="font-display text-2xl mb-2">Хотите рассчитать стоимость?</p>
           <p className="font-body text-cream/70 text-sm mb-5">Калькулятор покажет точную цену за 30 секунд</p>

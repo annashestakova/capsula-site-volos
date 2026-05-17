@@ -166,11 +166,10 @@ export default function CalculatorTeaser() {
                   </p>
 
                   <Link
-                    href="https://t.me/volos_capsula"
-                    target="_blank"
+                    href="/booking"
                     className="btn-primary w-full justify-center"
                   >
-                    Записаться к Анне
+                    Выбрать время
                     <ArrowRight size={16} />
                   </Link>
                 </motion.div>

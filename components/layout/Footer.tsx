@@ -40,9 +40,11 @@ export default function Footer() {
             <h4 className="font-body font-semibold text-cream mb-5 text-sm tracking-widest uppercase">Разделы</h4>
             <ul className="space-y-3">
               {[
+                { href: "/booking",    label: "Запись онлайн" },
                 { href: "/services",   label: "Услуги и цены" },
                 { href: "/calculator", label: "Калькулятор" },
                 { href: "/portfolio",  label: "Портфолио" },
+                { href: "/blog",       label: "Блог" },
                 { href: "/about",      label: "О мастере" },
                 { href: "/contacts",   label: "Контакты" },
               ].map(l => (
@@ -71,8 +73,8 @@ export default function Footer() {
             </ul>
             <div className="mt-6 pt-6 border-t border-cream/10">
               <p className="text-xs text-cream/40 font-body">
-                Запись через Telegram-бот<br />
-                <Link href="https://t.me/volos_capsula" className="text-rose/70">@volos_capsula</Link>
+                Запись через календарь сайта<br />
+                <Link href="/booking" className="text-rose/70">выбрать свободный слот</Link>
               </p>
             </div>
           </div>

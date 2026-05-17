@@ -69,11 +69,10 @@ export function AboutTeaser() {
                   <p className="font-body text-xs text-cream/30 mt-1">+ бонусом гайд по уходу</p>
                 </div>
                 <Link
-                  href="https://t.me/volos_capsula"
-                  target="_blank"
+                  href="/booking"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-rose text-cream text-sm font-body font-medium rounded-full hover:bg-blush hover:text-espresso transition-all"
                 >
-                  Попробовать ИИ
+                  Выбрать время
                   <ArrowRight size={14} />
                 </Link>
               </div>
@@ -86,10 +85,24 @@ export function AboutTeaser() {
 }
 
 const reviews = [
-  { name: "Катя М.",   city: "Брест",  text: "Носила 4,5 месяца — ни одна капсула не выпала. Следовала гайду и всё было идеально!", rating: 5 },
-  { name: "Марина С.", city: "Минск",  text: "Анна профессионал. ИИ-бот помог рассчитать стоимость заранее, приехала уже подготовленной.", rating: 5 },
-  { name: "Алина В.",  city: "Брест",  text: "Капсульное наращивание впервые — объяснила всё, показала как ухаживать. Результат превзошёл ожидания!", rating: 5 },
-  { name: "Таня Д.",   city: "Минск",  text: "Делала загущение, объём невероятный. Никто не верит что нарощенные. Записалась уже на коррекцию.", rating: 5 },
+  {
+    name: "Виктория",
+    city: "Яндекс Карты",
+    text: "Отмечает густоту, длину и форму после работы Анны. Пишет, что результат стал для неё настоящим преображением.",
+    rating: 5,
+  },
+  {
+    name: "Elena W.",
+    city: "Яндекс Карты",
+    text: "Довольна холодным наращиванием, аккуратной работой и комфортной студией. Отдельно отметила удобную парковку.",
+    rating: 5,
+  },
+  {
+    name: "Анна Ш.",
+    city: "Яндекс Карты",
+    text: "Сравнивает с другими мастерами и выделяет качество капсул: держатся ровно, не сползают и выглядят как родные.",
+    rating: 5,
+  },
 ];
 
 export function TestimonialsSection() {
@@ -110,7 +123,7 @@ export function TestimonialsSection() {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {reviews.map((r, i) => (
             <motion.div
               key={r.name}
@@ -136,6 +149,17 @@ export function TestimonialsSection() {
             </motion.div>
           ))}
         </div>
+
+        <div className="mt-10 text-center">
+          <Link
+            href="https://yandex.by/maps/org/u_anny/90436287873/reviews/?ll=23.678135%2C52.105687&z=16"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-outline"
+          >
+            Все отзывы на Яндекс Картах
+          </Link>
+        </div>
       </div>
     </section>
   );
@@ -160,15 +184,14 @@ export function BookingCTA() {
               <em className="italic text-blush">изменениям?</em>
             </h2>
             <p className="font-body text-cream/60 max-w-md mx-auto mb-10">
-              Запишитесь через Telegram-бот — там же можно рассчитать стоимость, задать вопросы ИИ-консультанту и выбрать удобное время.
+              Выберите услугу, дату и время в календаре. Заявка уйдёт Анне в Telegram, а подтверждённые слоты исчезнут из расписания.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="https://t.me/volos_capsula"
-                target="_blank"
+                href="/booking"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-cream text-espresso font-body font-medium rounded-full hover:bg-blush transition-all hover:scale-105"
               >
-                Открыть Telegram-бот
+                Открыть календарь
                 <ArrowRight size={16} />
               </Link>
               <Link href="/calculator" className="inline-flex items-center gap-2 px-8 py-4 border border-cream/30 text-cream font-body font-medium rounded-full hover:bg-cream/10 transition-all">

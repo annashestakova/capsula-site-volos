@@ -4,15 +4,16 @@ import Footer from "@/components/layout/Footer";
 import { BookingCTA } from "@/components/sections/AboutTeaser";
 
 export const metadata: Metadata = {
-  title: "Услуги и цены",
-  description: "Капсульное наращивание, биопротеин, загущение, коррекция. Цены в Бресте и Минске.",
+  title: "Услуги и цены — наращивание волос в Бресте и Минске",
+  description: "Капсульное наращивание волос в Бресте от 350 BYN. Биопротеин, загущение, коррекция. Мастер Анна — натуральный славянский волос, 5 лет опыта.",
+  keywords: ["наращивание волос Брест", "капсульное наращивание Брест", "биопротеиновое наращивание Брест", "загущение волос Брест", "коррекция волос Брест цена"],
 };
 
 const services = [
   {
     title: "Капсульное наращивание",
     desc: "Горячий метод на натуральном славянском волосе. Капсулы прикрепляются у корней и держатся 3–4 месяца.",
-    items: ["Работа: 1.6 BYN/капсулу", "Волос отдельно (от 754 BYN/100г)", "Загущение: от 160 BYN", "Удлинение: от 400 BYN"],
+    items: ["Работа: 1.6 BYN/капсулу", "Волос отдельно (от 754 BYN/100г)", "Загущение: от 350 BYN", "Удлинение: от 400 BYN"],
     accent: "bg-blush/20",
   },
   {
@@ -30,7 +31,7 @@ const services = [
   {
     title: "Коррекция",
     desc: "Поддержание нарощенных волос каждые 2–2,5 месяца. Капсулы поднимаются ближе к корням.",
-    items: ["от 80 BYN", "Рекомендуется раз в 2–2,5 месяца"],
+    items: ["от 160 BYN", "Рекомендуется раз в 2–2,5 месяца"],
     accent: "bg-gold/15",
   },
   {
@@ -55,13 +56,13 @@ export default function ServicesPage() {
           <div className="container-site">
             <div className="max-w-2xl mb-20">
               <p className="font-body text-sm text-rose font-medium tracking-widest uppercase mb-4">Услуги</p>
-              <h1 className="font-display text-6xl md:text-7xl font-light text-espresso leading-tight">
+              <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light text-espresso leading-tight">
                 Услуги
                 <br />
                 <em className="italic text-rose">и цены</em>
               </h1>
               <p className="font-body text-mink mt-6 leading-relaxed">
-                Стоимость работы и волос указана отдельно — так честнее. Вы платите ровно столько, сколько нужно именно вам.
+                Наращивание волос в Бресте и Минске. Стоимость работы и волос указана отдельно — так честнее. Вы платите ровно столько, сколько нужно именно вам.
               </p>
             </div>
 

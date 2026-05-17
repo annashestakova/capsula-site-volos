@@ -2,7 +2,7 @@
 import { MetadataRoute } from "next";
 import { BLOG_POSTS } from "./blog/data";
 
-const BASE_URL = "https://volos-capsula.by"; // ← замени на свой домен когда купишь
+const BASE_URL = "https://capssula.by";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
@@ -11,6 +11,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1.0,
+    },
+    {
+      url: `${BASE_URL}/booking`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.95,
     },
     {
       url: `${BASE_URL}/services`,

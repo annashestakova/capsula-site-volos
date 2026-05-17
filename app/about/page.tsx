@@ -5,8 +5,9 @@ import { BookingCTA } from "@/components/sections/AboutTeaser";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "О мастере",
-  description: "Мастер наращивания волос Анна — 5 лет опыта в Бресте и Минске.",
+  title: "О мастере — Анна, наращивание волос в Бресте",
+  description: "Анна — мастер капсульного наращивания волос в Бресте. 5 лет опыта, 300+ клиенток, только натуральный славянский волос. Выезд в Минск.",
+  keywords: ["мастер наращивание волос Брест", "наращивание волос Анна Брест", "капсульное наращивание мастер Брест"],
 };
 
 export default function AboutPage() {
@@ -19,7 +20,7 @@ export default function AboutPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div>
                 <p className="font-body text-sm text-rose font-medium tracking-widest uppercase mb-4">О мастере</p>
-                <h1 className="font-display text-6xl md:text-7xl font-light text-espresso leading-tight mb-8">
+                <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light text-espresso leading-tight mb-8">
                   Анна,
                   <br />
                   <em className="italic text-rose">мастер</em>
