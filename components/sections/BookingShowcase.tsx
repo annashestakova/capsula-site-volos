@@ -13,8 +13,12 @@ const slides = [
     icon: Scissors,
     lottieSrc: "/lottie/orange-cat-peeping.json",
     lottieLabel: "кот выглядывает",
-    lottieClass: "h-[300px] max-w-[250px] lg:h-[360px] lg:max-w-[300px]",
+    lottieClass: "h-[260px] max-w-[220px] lg:h-[300px] lg:max-w-[260px]",
     speed: 0.9,
+    decoTop: "/lottie/fitting.json",
+    decoTopLabel: "примерка",
+    decoBottom: "/lottie/fashionable-girl-red-dress.json",
+    decoBottomLabel: "девушка",
   },
   {
     title: "Выберите время",
@@ -22,8 +26,12 @@ const slides = [
     icon: CalendarCheck,
     lottieSrc: "/lottie/location-search.json",
     lottieLabel: "поиск локации",
-    lottieClass: "h-[280px] max-w-[360px] lg:h-[340px] lg:max-w-[420px]",
+    lottieClass: "h-[240px] max-w-[320px] lg:h-[290px] lg:max-w-[360px]",
     speed: 0.85,
+    decoTop: "/lottie/cat-love.json",
+    decoTopLabel: "котик",
+    decoBottom: "/lottie/summer-breeze.json",
+    decoBottomLabel: "лето",
   },
   {
     title: "Анна на связи",
@@ -31,8 +39,12 @@ const slides = [
     icon: MessageCircle,
     lottieSrc: "/lottie/travel.json",
     lottieLabel: "машинка едет",
-    lottieClass: "h-[270px] max-w-[380px] lg:h-[330px] lg:max-w-[450px]",
+    lottieClass: "h-[240px] max-w-[320px] lg:h-[280px] lg:max-w-[380px]",
     speed: 0.78,
+    decoTop: "/lottie/pink-cat.json",
+    decoTopLabel: "розовый котик",
+    decoBottom: "/lottie/orange-cat-peeping.json",
+    decoBottomLabel: "кот",
   },
 ];
 
@@ -114,8 +126,29 @@ export default function BookingShowcase() {
                 </Link>
               </div>
             </div>
-            <div className="relative min-h-[300px] lg:min-h-[380px]" aria-hidden="true">
+            <div className="relative min-h-[340px] lg:min-h-[420px]" aria-hidden="true">
               <div className="absolute inset-6 rounded-full bg-blush/10 blur-3xl" />
+
+              {/* Deco top-right — switches with slide */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`decoTop-${active}`}
+                  initial={{ opacity: 0, scale: 0.7, x: 20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.7, x: 20 }}
+                  transition={{ duration: 0.4 }}
+                  className="absolute top-0 right-0 z-20 w-24 h-24 lg:w-32 lg:h-32 pointer-events-none"
+                >
+                  <LottiePlayer
+                    src={slide.decoTop}
+                    className="w-full h-full opacity-80"
+                    ariaLabel={slide.decoTopLabel}
+                    speed={0.9}
+                  />
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Main lottie — center */}
               <AnimatePresence mode="wait">
                 <motion.div
                   key={slide.lottieSrc}
@@ -123,13 +156,32 @@ export default function BookingShowcase() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -18, scale: 0.96 }}
                   transition={{ duration: 0.35 }}
-                  className="relative z-10 flex min-h-[300px] items-center justify-center lg:min-h-[380px]"
+                  className="relative z-10 flex min-h-[340px] items-center justify-center lg:min-h-[420px]"
                 >
                   <LottiePlayer
                     src={slide.lottieSrc}
                     className={`pointer-events-none mx-auto w-full ${slide.lottieClass}`}
                     ariaLabel={slide.lottieLabel}
                     speed={slide.speed}
+                  />
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Deco bottom-left — switches with slide */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`decoBottom-${active}`}
+                  initial={{ opacity: 0, scale: 0.7, x: -20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.7, x: -20 }}
+                  transition={{ duration: 0.4 }}
+                  className="absolute bottom-0 left-0 z-20 w-24 h-24 lg:w-32 lg:h-32 pointer-events-none"
+                >
+                  <LottiePlayer
+                    src={slide.decoBottom}
+                    className="w-full h-full opacity-70"
+                    ariaLabel={slide.decoBottomLabel}
+                    speed={0.85}
                   />
                 </motion.div>
               </AnimatePresence>

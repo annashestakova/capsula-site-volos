@@ -1,6 +1,7 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
+import BannerSection from "@/components/sections/BannerSection";
 import ServicesPreview from "@/components/sections/ServicesPreview";
 import CalculatorTeaser from "@/components/sections/CalculatorTeaser";
 import AboutTeaser from "@/components/sections/AboutTeaser";
@@ -15,6 +16,7 @@ export default function HomePage() {
       <Header />
       <main>
         <HeroSection />
+        <BannerSection />
         <MarqueeStrip />
         <BookingShowcase />
         <ServicesPreview />
