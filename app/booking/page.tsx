@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import BookingCalendar from "@/components/booking/BookingCalendar";
+import BookingFooterSection from "@/components/booking/BookingFooterSection";
 import Image from "next/image";
 
 export const metadata: Metadata = {
@@ -46,6 +47,7 @@ export default function BookingPage() {
           </div>
         </div>
         <BookingCalendar />
+        <BookingFooterSection />
       </main>
       <Footer />
     </>

@@ -283,11 +283,19 @@ export default function BookingCalendar() {
             className="relative overflow-hidden rounded-5xl bg-espresso p-8 md:p-10 text-cream"
           >
             <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-rose/20 to-transparent pointer-events-none" />
+            {/* Location animation */}
             <LottiePlayer
               src="/lottie/location-search.json"
-              className="absolute -right-20 bottom-0 hidden h-80 w-80 opacity-35 lg:block pointer-events-none"
+              className="absolute -right-16 bottom-0 h-64 w-64 opacity-25 sm:opacity-35 sm:h-80 sm:w-80 pointer-events-none"
               ariaLabel="поиск локации"
               speed={0.85}
+            />
+            {/* Girl walking animation */}
+            <LottiePlayer
+              src="/lottie/fashionable-girl-red-dress.json"
+              className="absolute left-0 bottom-0 h-48 w-48 opacity-20 sm:opacity-30 sm:h-60 sm:w-60 pointer-events-none"
+              ariaLabel="девушка"
+              speed={0.7}
             />
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 rounded-full bg-cream/10 px-4 py-2 text-sm text-cream/80">
