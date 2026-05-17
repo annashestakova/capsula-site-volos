@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import BookingCalendar from "@/components/booking/BookingCalendar";
+import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "Запись онлайн",
@@ -29,6 +30,21 @@ export default function BookingPage() {
             </p>
           </div>
         </section>
+        {/* Banner */}
+        <div className="container-site px-4 sm:px-6 py-8">
+          <div className="relative mx-auto max-w-5xl rounded-[1.5rem] overflow-hidden shadow-[0_20px_60px_rgba(236,72,153,0.15)]">
+            <Image
+              src="/hero-banner.png"
+              alt="Volos Capsula"
+              width={1672}
+              height={941}
+              quality={85}
+              className="w-full h-auto block"
+              sizes="(max-width: 768px) 100vw, 1000px"
+            />
+            <div className="absolute inset-0 rounded-[1.5rem] ring-1 ring-inset ring-white/20 pointer-events-none" />
+          </div>
+        </div>
         <BookingCalendar />
       </main>
       <Footer />
