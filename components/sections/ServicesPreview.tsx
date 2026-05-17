@@ -61,7 +61,7 @@ export default function ServicesPreview() {
         >
           <div>
             <p className="font-body text-sm text-rose font-medium tracking-widest uppercase mb-3">Услуги</p>
-            <h2 className="font-display text-5xl md:text-6xl font-light text-espresso leading-tight">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-espresso leading-tight">
               Что я делаю
               <br />
               <em className="italic">лучше всего</em>

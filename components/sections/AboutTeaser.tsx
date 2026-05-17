@@ -15,7 +15,7 @@ export function AboutTeaser() {
             transition={{ duration: 0.7 }}
           >
             <p className="font-body text-sm text-rose font-medium tracking-widest uppercase mb-4">О мастере</p>
-            <h2 className="font-display text-5xl md:text-6xl font-light leading-tight mb-8">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light leading-tight mb-8">
               Привет,
               <br />
               я <em className="italic text-blush">Анна</em>
@@ -116,7 +116,7 @@ export function TestimonialsSection() {
           className="text-center mb-16"
         >
           <p className="font-body text-sm text-rose font-medium tracking-widest uppercase mb-3">Отзывы</p>
-          <h2 className="font-display text-5xl md:text-6xl font-light text-espresso">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-espresso">
             Что говорят
             <br />
             <em className="italic">клиентки</em>
@@ -179,7 +179,7 @@ export function BookingCTA() {
           <div className="absolute bottom-0 left-0 w-60 h-60 bg-lavender/10 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10">
             <p className="font-body text-sm text-rose font-medium tracking-widest uppercase mb-4">Запись</p>
-            <h2 className="font-display text-5xl md:text-6xl font-light text-cream leading-tight mb-6">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-cream leading-tight mb-6 text-center">
               Готова к{" "}
               <em className="italic text-blush">изменениям?</em>
             </h2>

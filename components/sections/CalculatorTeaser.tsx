@@ -63,7 +63,7 @@ export default function CalculatorTeaser() {
               <Calculator size={14} className="text-rose" />
               <span className="font-body text-sm text-rose font-medium">Онлайн-калькулятор</span>
             </div>
-            <h2 className="font-display text-5xl md:text-6xl font-light text-espresso leading-tight mb-6">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-espresso leading-tight mb-6">
               Узнайте цену
               <br />
               <em className="italic text-rose">прямо сейчас</em>

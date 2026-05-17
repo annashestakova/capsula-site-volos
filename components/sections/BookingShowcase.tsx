@@ -65,7 +65,7 @@ export default function BookingShowcase() {
               <p className="font-body text-sm font-medium uppercase tracking-widest text-blush">
                 Онлайн-запись
               </p>
-              <h2 className="mt-4 font-display text-5xl font-light leading-tight md:text-7xl">
+              <h2 className="mt-4 font-display text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-light leading-tight">
                 Записаться
                 <br />
                 <em className="italic text-blush">просто и быстро</em>
