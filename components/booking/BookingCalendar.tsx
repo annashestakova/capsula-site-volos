@@ -28,7 +28,6 @@ type SubmitState =
   | { status: "success"; requestId: string; quote: string; telegramConfigured: boolean; preferredContact: ContactPreference }
   | { status: "error"; message: string };
 
-// Deterministic fake-booked slots for social proof (~25% of slots look taken)
 function isFakeBooked(date: string, time: string): boolean {
   const key = date + time;
   let hash = 0;
@@ -48,16 +47,8 @@ const emptyForm = {
 };
 
 const contactOptions: Array<{ value: ContactPreference; label: string; hint: string }> = [
-  {
-    value: "telegram",
-    label: "Написать в Telegram",
-    hint: "Удобно для быстрых уточнений и переноса записи.",
-  },
-  {
-    value: "phone",
-    label: "Позвонить по телефону",
-    hint: "Подойдёт, если проще обсудить детали голосом.",
-  },
+  { value: "telegram", label: "Написать в Telegram", hint: "Удобно для быстрых уточнений и переноса записи." },
+  { value: "phone",    label: "Позвонить по телефону", hint: "Подойдёт, если проще обсудить детали голосом." },
 ];
 
 export default function BookingCalendar() {
@@ -74,78 +65,38 @@ export default function BookingCalendar() {
   useEffect(() => {
     setQuoteIndex(Math.floor(Math.random() * BEAUTY_QUOTES.length));
     setQuoteMounted(true);
-    const quoteTimer = setInterval(() => {
-      setQuoteIndex((i) => (i + 1) % BEAUTY_QUOTES.length);
-    }, 6000);
-    return () => clearInterval(quoteTimer);
+    const t = setInterval(() => setQuoteIndex((i) => (i + 1) % BEAUTY_QUOTES.length), 6000);
+    return () => clearInterval(t);
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-
     async function loadSlots() {
       setSlotsLoading(true);
-      const response = await fetch("/api/booking/slots", { cache: "no-store" });
-      const data = (await response.json()) as SlotsResponse;
-
-      if (cancelled) {
-        return;
-      }
-
+      const res = await fetch("/api/booking/slots", { cache: "no-store" });
+      const data = (await res.json()) as SlotsResponse;
+      if (cancelled) return;
       setDays(data.days);
       setSlotsLoading(false);
-
-      const firstDay = data.days.find((day) => day.slots.length > 0);
-      if (firstDay) {
-        setSelectedDate(firstDay.date);
-        setSelectedTime(firstDay.slots[0]?.time ?? "");
-      }
+      const first = data.days.find((d) => d.slots.length > 0);
+      if (first) { setSelectedDate(first.date); setSelectedTime(first.slots[0]?.time ?? ""); }
     }
-
-    loadSlots().catch(() => {
-      if (!cancelled) {
-        setSlotsLoading(false);
-        setSubmitState({
-          status: "error",
-          message: "Не удалось загрузить свободные слоты. Обновите страницу.",
-        });
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
+    loadSlots().catch(() => { if (!cancelled) { setSlotsLoading(false); setSubmitState({ status: "error", message: "Не удалось загрузить слоты. Обновите страницу." }); } });
+    return () => { cancelled = true; };
   }, []);
 
-  const selectedService = useMemo(
-    () => BOOKING_SERVICES.find((service) => service.id === serviceId) ?? BOOKING_SERVICES[0],
-    [serviceId],
+  const selectedService = useMemo(() => BOOKING_SERVICES.find((s) => s.id === serviceId) ?? BOOKING_SERVICES[0], [serviceId]);
+
+  const availableDays = useMemo(() =>
+    days.map((day) => {
+      const slots = day.slots.filter((slot) => isSlotAllowedForService(serviceId, slot.time));
+      return { ...day, slots, availableCount: slots.length };
+    }).filter((day) => day.slots.length > 0),
+    [days, serviceId]
   );
 
-  const availableDays = useMemo(
-    () => days
-      .map((day) => {
-        const slots = day.slots.filter((slot) => isSlotAllowedForService(serviceId, slot.time));
-
-        return {
-          ...day,
-          slots,
-          availableCount: slots.length,
-        };
-      })
-      .filter((day) => day.slots.length > 0),
-    [days, serviceId],
-  );
-
-  const selectedDay = useMemo(
-    () => availableDays.find((day) => day.date === selectedDate),
-    [availableDays, selectedDate],
-  );
-
-  const selectedSlot = useMemo<BookingSlot | undefined>(
-    () => selectedDay?.slots.find((slot) => slot.time === selectedTime),
-    [selectedDay, selectedTime],
-  );
+  const selectedDay  = useMemo(() => availableDays.find((d) => d.date === selectedDate), [availableDays, selectedDate]);
+  const selectedSlot = useMemo<BookingSlot | undefined>(() => selectedDay?.slots.find((s) => s.time === selectedTime), [selectedDay, selectedTime]);
 
   const hasPhone = form.phone.trim().length > 0;
   const hasTelegram = form.telegram.trim().length > 0;
@@ -153,430 +104,257 @@ export default function BookingCalendar() {
   const longServiceSelected = isLongBookingService(serviceId);
 
   useEffect(() => {
-    if (slotsLoading || availableDays.length === 0) {
-      return;
-    }
-
-    const currentDay = availableDays.find((day) => day.date === selectedDate);
-
-    if (!currentDay) {
-      const firstDay = availableDays[0];
-      setSelectedDate(firstDay.date);
-      setSelectedTime(firstDay.slots[0]?.time ?? "");
-      return;
-    }
-
-    if (!currentDay.slots.some((slot) => slot.time === selectedTime)) {
-      setSelectedTime(currentDay.slots[0]?.time ?? "");
-    }
+    if (slotsLoading || availableDays.length === 0) return;
+    const cur = availableDays.find((d) => d.date === selectedDate);
+    if (!cur) { const f = availableDays[0]; setSelectedDate(f.date); setSelectedTime(f.slots[0]?.time ?? ""); return; }
+    if (!cur.slots.some((s) => s.time === selectedTime)) setSelectedTime(cur.slots[0]?.time ?? "");
   }, [availableDays, selectedDate, selectedTime, slotsLoading]);
 
-  function selectDate(day: BookingDay) {
-    setSelectedDate(day.date);
-    setSelectedTime(day.slots[0]?.time ?? "");
-    setSubmitState({ status: "idle" });
-  }
-
+  function selectDate(day: BookingDay) { setSelectedDate(day.date); setSelectedTime(day.slots[0]?.time ?? ""); setSubmitState({ status: "idle" }); }
   function getPreferredContact(): ContactPreference {
-    if (needsPreferredContact && form.preferredContact) {
-      return form.preferredContact;
-    }
-
+    if (needsPreferredContact && form.preferredContact) return form.preferredContact;
     return hasTelegram ? "telegram" : "phone";
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!selectedSlot) {
-      setSubmitState({ status: "error", message: "Выберите свободное время." });
-      return;
-    }
-
-    if (!hasPhone && !hasTelegram) {
-      setSubmitState({
-        status: "error",
-        message: "Укажите телефон или Telegram, чтобы Анна могла связаться с вами.",
-      });
-      return;
-    }
-
-    if (needsPreferredContact && !form.preferredContact) {
-      setSubmitState({
-        status: "error",
-        message: "Вы указали два контакта. Выберите, как с вами лучше связаться.",
-      });
-      return;
-    }
-
-    if (!isSlotAllowedForService(serviceId, selectedSlot.time)) {
-      setSubmitState({
-        status: "error",
-        message: "Для наращивания и коррекции последний старт — не позже 18:00.",
-      });
-      return;
-    }
-
-    if (!form.privacyAccepted) {
-      setSubmitState({
-        status: "error",
-        message: "Подтвердите согласие на обработку персональных данных.",
-      });
-      return;
-    }
-
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!selectedSlot) { setSubmitState({ status: "error", message: "Выберите свободное время." }); return; }
+    if (!hasPhone && !hasTelegram) { setSubmitState({ status: "error", message: "Укажите телефон или Telegram." }); return; }
+    if (needsPreferredContact && !form.preferredContact) { setSubmitState({ status: "error", message: "Выберите удобный способ связи." }); return; }
+    if (!isSlotAllowedForService(serviceId, selectedSlot.time)) { setSubmitState({ status: "error", message: "Для наращивания и коррекции последний старт — не позже 18:00." }); return; }
+    if (!form.privacyAccepted) { setSubmitState({ status: "error", message: "Подтвердите согласие на обработку данных." }); return; }
     setSubmitState({ status: "loading" });
-
-    const response = await fetch("/api/booking", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        serviceId,
-        date: selectedSlot.date,
-        time: selectedSlot.time,
-        city: selectedSlot.city,
-        ...form,
-        preferredContact: getPreferredContact(),
-      }),
-    });
-
-    const data = (await response.json()) as {
-      ok: boolean;
-      message?: string;
-      requestId?: string;
-      quote?: string;
-      telegram?: { configured: boolean; ok: boolean };
-    };
-
-    if (!response.ok || !data.ok || !data.requestId || !data.quote) {
-      setSubmitState({
-        status: "error",
-        message: data.message ?? "Не удалось отправить запись. Попробуйте ещё раз.",
-      });
-      return;
-    }
-
-    setSubmitState({
-      status: "success",
-      requestId: data.requestId,
-      quote: data.quote,
-      telegramConfigured: Boolean(data.telegram?.configured),
-      preferredContact: getPreferredContact(),
-    });
+    const res = await fetch("/api/booking", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ serviceId, date: selectedSlot.date, time: selectedSlot.time, city: selectedSlot.city, ...form, preferredContact: getPreferredContact() }) });
+    const data = (await res.json()) as { ok: boolean; message?: string; requestId?: string; quote?: string; telegram?: { configured: boolean; ok: boolean } };
+    if (!res.ok || !data.ok || !data.requestId || !data.quote) { setSubmitState({ status: "error", message: data.message ?? "Не удалось отправить заявку." }); return; }
+    setSubmitState({ status: "success", requestId: data.requestId, quote: data.quote, telegramConfigured: Boolean(data.telegram?.configured), preferredContact: getPreferredContact() });
     setForm(emptyForm);
-    // Google Ads conversion tracking
-    if (typeof window !== "undefined" && (window as any).gtag) {
-      (window as any).gtag("event", "conversion", {
-        send_to: "AW-CONVERSION_ID/CONVERSION_LABEL",
-      });
-    }
+    if (typeof window !== "undefined" && (window as any).gtag) (window as any).gtag("event", "conversion", { send_to: "AW-CONVERSION_ID/CONVERSION_LABEL" });
   }
 
   return (
-    <section className="section-padding bg-milk">
+    <section className="py-14 sm:py-20" style={{ background: "linear-gradient(180deg,#fdf8fb 0%,#fef5f9 100%)" }}>
       <div className="container-site">
-        <div className="grid grid-cols-1 xl:grid-cols-[0.82fr_1.18fr] gap-10 items-start">
+        <div className="grid grid-cols-1 xl:grid-cols-[0.75fr_1.25fr] gap-8 items-start">
+
+          {/* ── Left: soft pink info panel ── */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="relative overflow-hidden rounded-5xl bg-espresso p-8 md:p-10 text-cream"
+            className="relative overflow-hidden rounded-[2rem] border border-pink-100 p-6 md:p-8"
+            style={{ background: "linear-gradient(145deg,#fdf2f8 0%,#fce7f3 60%,#fdf4fb 100%)" }}
           >
-            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-rose/20 to-transparent pointer-events-none" />
-            {/* Location animation */}
-            <LottiePlayer
-              src="/lottie/location-search.json"
-              className="absolute -right-16 bottom-0 h-64 w-64 opacity-25 sm:opacity-35 sm:h-80 sm:w-80 pointer-events-none"
-              ariaLabel="поиск локации"
-              speed={0.85}
-            />
-            {/* Girl walking animation */}
-            <LottiePlayer
-              src="/lottie/fashionable-girl-red-dress.json"
-              className="absolute left-0 bottom-0 h-48 w-48 opacity-20 sm:opacity-30 sm:h-60 sm:w-60 pointer-events-none"
-              ariaLabel="девушка"
-              speed={0.7}
-            />
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 rounded-full bg-cream/10 px-4 py-2 text-sm text-cream/80">
-                <Sparkles size={14} className="text-blush" />
-                Живая запись
-              </div>
-              <h2 className="mt-8 font-display text-4xl sm:text-5xl font-light leading-tight">
-                Выберите
-                <br />
-                <em className="italic text-blush">свой слот</em>
-              </h2>
-              <p className="mt-6 max-w-md font-body text-sm leading-relaxed text-cream/65">
-                Запись занимает пару минут: выберите услугу, удобное время и оставьте контакт.
-                Анна проверит заявку и подтвердит её лично.
-              </p>
-
-              <div className="mt-10 grid gap-3">
-                {[
-                  "Свободные часы показаны сразу в календаре",
-                  "Если время не подойдёт, Анна предложит ближайший вариант",
-                  "После подтверждения слот закрепляется за вами",
-                  "Контакты нужны только для связи по записи",
-                ].map((item) => (
-                  <div key={item} className="flex items-start gap-3 rounded-3xl bg-cream/[0.08] p-4">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-blush" />
-                    <span className="font-body text-sm text-cream/75">{item}</span>
-                  </div>
-                ))}
-              </div>
-
-              <p className="mt-8 rounded-3xl border border-blush/20 bg-blush/10 p-4 font-body text-xs leading-relaxed text-cream/65">
-                После отправки дождитесь подтверждения: так мы точно проверим длительность услуги,
-                подготовим нужный объём волос и не будем спешить с вашим образом.
-              </p>
-
-              {quoteMounted && (
-                <div className="mt-8 border-t border-cream/10 pt-6">
-                  <AnimatePresence mode="wait">
-                    <motion.p
-                      key={quoteIndex}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.5 }}
-                      className="font-display text-base italic leading-relaxed text-blush/80"
-                    >
-                      &ldquo;{BEAUTY_QUOTES[quoteIndex]}&rdquo;
-                    </motion.p>
-                  </AnimatePresence>
-                </div>
-              )}
+            {/* Girl lottie decorative */}
+            <div className="relative h-52 sm:h-60 mb-6 flex items-end justify-center">
+              <LottiePlayer
+                src="/lottie/fashionable-girl-red-dress.json"
+                className="h-full w-auto"
+                ariaLabel="девушка"
+                speed={0.8}
+              />
+              {/* Ground line */}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 h-px bg-gradient-to-r from-transparent via-pink-300/60 to-transparent" />
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-2 rounded-full bg-pink-200/30 blur-md" />
             </div>
+
+            <div className="inline-flex items-center gap-2 rounded-full border border-pink-200/60 bg-white/70 px-3 py-1.5 text-xs text-rose mb-4">
+              <Sparkles size={12} />
+              Живая запись
+            </div>
+
+            <h2 className="font-display text-3xl sm:text-4xl font-light text-espresso leading-tight mb-3">
+              Выберите<br />
+              <em className="italic text-rose">свой слот</em>
+            </h2>
+            <p className="font-body text-sm leading-relaxed text-mink/70 mb-6">
+              Выберите услугу, удобное время и оставьте контакт. Анна подтвердит запись лично.
+            </p>
+
+            <div className="grid gap-2 mb-6">
+              {[
+                "Свободные часы показаны сразу в календаре",
+                "Анна предложит ближайший вариант, если нужно",
+                "Слот закрепляется после подтверждения",
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-2.5 rounded-2xl bg-white/60 p-3">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-rose" />
+                  <span className="font-body text-xs text-mink/80">{item}</span>
+                </div>
+              ))}
+            </div>
+
+            {quoteMounted && (
+              <div className="border-t border-pink-200/50 pt-4">
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={quoteIndex}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.4 }}
+                    className="font-display text-sm italic leading-relaxed text-rose/70"
+                  >
+                    &ldquo;{BEAUTY_QUOTES[quoteIndex]}&rdquo;
+                  </motion.p>
+                </AnimatePresence>
+              </div>
+            )}
           </motion.div>
 
+          {/* ── Right: compact form ── */}
           <motion.form
             onSubmit={handleSubmit}
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="rounded-5xl border border-sand/60 bg-white/75 p-5 shadow-sm backdrop-blur md:p-8"
+            className="rounded-[2rem] border border-pink-100/80 bg-white/80 p-5 shadow-sm backdrop-blur md:p-7"
           >
-            <div className="flex flex-col gap-3 border-b border-sand/70 pb-6 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="font-body text-xs font-medium uppercase tracking-widest text-rose">
-                  Шаг 1
-                </p>
-                <h3 className="font-display text-2xl sm:text-3xl font-light text-espresso">
-                  Услуга
-                </h3>
-              </div>
-              <span className="rounded-full bg-blush/20 px-4 py-2 font-body text-xs text-mink">
+            {/* STEP 1 — Service */}
+            <StepLabel n="1" title="Услуга" extra={
+              <span className="rounded-full bg-pink-50 border border-pink-100 px-3 py-1 font-body text-xs text-mink">
                 {selectedService.duration}
               </span>
-            </div>
+            } />
 
-            <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
               {BOOKING_SERVICES.map((service) => (
                 <button
                   key={service.id}
                   type="button"
-                  onClick={() => {
-                    setServiceId(service.id);
-                    setSubmitState({ status: "idle" });
-                  }}
-                  className={`min-h-[100px] sm:min-h-[116px] rounded-3xl border p-4 sm:p-5 text-left transition-all ${
+                  onClick={() => { setServiceId(service.id); setSubmitState({ status: "idle" }); }}
+                  className={`rounded-2xl border p-3 sm:p-4 text-left transition-all ${
                     serviceId === service.id
-                      ? "border-rose bg-blush/20 shadow-sm"
-                      : "border-sand bg-cream/70 hover:border-rose/70"
+                      ? "border-rose bg-rose/5 shadow-sm"
+                      : "border-pink-100 bg-pink-50/50 hover:border-rose/50"
                   }`}
                 >
-                  <span className="font-body text-xs font-medium uppercase tracking-widest text-rose">
-                    {service.price}
-                  </span>
-                  <span className="mt-2 block font-body text-sm font-semibold text-espresso">
-                    {service.title}
-                  </span>
-                  <span className="mt-1 block font-body text-[11px] font-medium uppercase tracking-widest text-mink/70">
-                    {service.duration}
-                  </span>
-                  <span className="mt-2 block font-body text-xs leading-relaxed text-mink">
-                    {service.note}
-                  </span>
+                  <span className="font-body text-xs font-semibold text-rose">{service.price}</span>
+                  <span className="mt-1 block font-body text-sm font-semibold text-espresso">{service.title}</span>
+                  <span className="mt-0.5 block font-body text-[11px] text-mink/60 uppercase tracking-wide">{service.duration}</span>
+                  <span className="mt-1 block font-body text-xs leading-snug text-mink/70">{service.note}</span>
                 </button>
               ))}
             </div>
 
-            <div className="mt-9 flex items-center gap-3">
-              <CalendarDays className="h-5 w-5 text-rose" />
-              <div>
-                <p className="font-body text-xs font-medium uppercase tracking-widest text-rose">
-                  Шаг 2
-                </p>
-                <h3 className="font-display text-2xl sm:text-3xl font-light text-espresso">
-                  Дата
-                </h3>
-              </div>
+            {/* STEP 2 — Date */}
+            <div className="mt-7 flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-rose" />
+              <StepLabel n="2" title="Дата" />
             </div>
 
             {slotsLoading ? (
-              <div className="mt-6 flex min-h-48 items-center justify-center rounded-4xl bg-cream">
-                <Loader2 className="h-6 w-6 animate-spin text-rose" />
+              <div className="mt-4 flex min-h-32 items-center justify-center rounded-2xl bg-pink-50">
+                <Loader2 className="h-5 w-5 animate-spin text-rose" />
               </div>
             ) : (
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
-                {availableDays.slice(0, 28).map((day) => (
+              <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+                {availableDays.slice(0, 14).map((day) => (
                   <button
                     key={day.date}
                     type="button"
                     onClick={() => selectDate(day)}
-                    className={`min-h-[88px] sm:min-h-[104px] rounded-3xl border p-2 sm:p-3 text-center transition-all ${
+                    className={`rounded-2xl border p-2 text-center transition-all ${
                       selectedDate === day.date
-                        ? "border-espresso bg-espresso text-cream"
-                        : "border-sand bg-cream hover:border-rose hover:bg-blush/20"
+                        ? "border-rose bg-rose text-white shadow-sm"
+                        : "border-pink-100 bg-pink-50/60 hover:border-rose/60 hover:bg-rose/5"
                     }`}
                   >
-                    <span className="block font-body text-xs uppercase text-current/60">
-                      {day.weekday}
-                    </span>
-                    <span className="mt-1 block font-display text-2xl sm:text-3xl font-semibold">
-                      {day.dayNumber}
-                    </span>
-                    <span className="block font-body text-xs text-current/60">{day.month}</span>
-                    <span className="mt-2 block font-body text-[11px] text-current/60">
-                      {day.availableCount} слота
-                    </span>
+                    <span className="block font-body text-[10px] uppercase opacity-70">{day.weekday}</span>
+                    <span className="mt-0.5 block font-display text-xl font-semibold">{day.dayNumber}</span>
+                    <span className="block font-body text-[10px] opacity-60">{day.month}</span>
+                    <span className="mt-1 block font-body text-[10px] opacity-60">{day.availableCount} сл.</span>
                   </button>
                 ))}
               </div>
             )}
 
-            <div className="mt-9 flex items-center gap-3">
-              <Clock className="h-5 w-5 text-rose" />
-              <div>
-                <p className="font-body text-xs font-medium uppercase tracking-widest text-rose">
-                  Шаг 3
-                </p>
-                <h3 className="font-display text-2xl sm:text-3xl font-light text-espresso">
-                  Время
-                </h3>
-              </div>
+            {/* STEP 3 — Time */}
+            <div className="mt-7 flex items-center gap-2">
+              <Clock className="h-4 w-4 text-rose" />
+              <StepLabel n="3" title="Время" />
             </div>
+
             {longServiceSelected && (
-              <p className="mt-3 rounded-3xl bg-blush/15 px-4 py-3 font-body text-xs leading-relaxed text-mink">
-                Для наращивания и коррекции последний старт — 18:00, чтобы спокойно успеть
-                выполнить процедуру.
+              <p className="mt-2 rounded-2xl bg-pink-50 border border-pink-100 px-3 py-2 font-body text-xs text-mink/70">
+                Для наращивания и коррекции — последний старт в 18:00.
               </p>
             )}
 
-            <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3">
+            <div className="mt-4 grid grid-cols-3 gap-2 md:grid-cols-4">
               {(selectedDay?.slots ?? []).map((slot) => {
                 const fakeBooked = isFakeBooked(slot.date, slot.time);
-                if (fakeBooked) {
-                  return (
-                    <div
-                      key={`${slot.date}-${slot.time}`}
-                      className="rounded-3xl border border-sand/40 bg-cream/40 p-4 opacity-50 cursor-not-allowed select-none"
-                      title="Это время уже занято"
-                    >
-                      <span className="block font-display text-xl sm:text-2xl font-semibold text-mink line-through">{slot.time}</span>
-                      <span className="mt-1 flex items-center gap-1 font-body text-xs text-mink/50">
-                        <MapPin size={12} />
-                        Занято
-                      </span>
-                    </div>
-                  );
-                }
+                if (fakeBooked) return (
+                  <div key={`${slot.date}-${slot.time}`}
+                    className="rounded-2xl border border-pink-100/40 bg-pink-50/30 p-3 opacity-40 cursor-not-allowed"
+                  >
+                    <span className="block font-display text-lg font-semibold text-mink line-through">{slot.time}</span>
+                    <span className="font-body text-[10px] text-mink/50">Занято</span>
+                  </div>
+                );
                 return (
                   <button
                     key={`${slot.date}-${slot.time}`}
                     type="button"
-                    onClick={() => {
-                      setSelectedTime(slot.time);
-                      setSubmitState({ status: "idle" });
-                    }}
-                    className={`rounded-3xl border p-4 text-left transition-all ${
+                    onClick={() => { setSelectedTime(slot.time); setSubmitState({ status: "idle" }); }}
+                    className={`rounded-2xl border p-3 text-left transition-all ${
                       selectedTime === slot.time
-                        ? "border-rose bg-rose text-cream"
-                        : "border-sand bg-cream hover:border-rose"
+                        ? "border-rose bg-rose text-white shadow-sm"
+                        : "border-pink-100 bg-pink-50/60 hover:border-rose/60"
                     }`}
                   >
-                    <span className="block font-display text-xl sm:text-2xl font-semibold">{slot.time}</span>
-                    <span className="mt-1 flex items-center gap-1 font-body text-xs text-current/70">
-                      <MapPin size={12} />
-                      {slot.city}
+                    <span className="block font-display text-lg font-semibold">{slot.time}</span>
+                    <span className="mt-0.5 flex items-center gap-1 font-body text-[10px] opacity-70">
+                      <MapPin size={10} />{slot.city}
                     </span>
                   </button>
                 );
               })}
             </div>
 
-            <div className="mt-9 grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* Contact fields */}
+            <div className="mt-7 grid grid-cols-1 gap-3 md:grid-cols-2">
               <label className="block">
-                <span className="mb-2 block font-body text-xs font-medium uppercase tracking-widest text-mink">
-                  Имя
-                </span>
-                <input
-                  required
-                  value={form.name}
-                  onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-                  className="w-full rounded-2xl border border-sand bg-cream px-4 py-3 font-body text-sm text-espresso outline-none transition focus:border-rose"
-                  placeholder="Анна"
-                />
+                <span className="mb-1.5 block font-body text-[11px] font-medium uppercase tracking-widest text-mink/70">Имя</span>
+                <input required value={form.name}
+                  onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                  className="w-full rounded-xl border border-pink-100 bg-pink-50/40 px-4 py-2.5 font-body text-sm text-espresso outline-none transition focus:border-rose focus:bg-white"
+                  placeholder="Анна" />
               </label>
               <label className="block">
-                <span className="mb-2 block font-body text-xs font-medium uppercase tracking-widest text-mink">
-                  Телефон
-                </span>
-                <input
-                  value={form.phone}
-                  onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
-                  className="w-full rounded-2xl border border-sand bg-cream px-4 py-3 font-body text-sm text-espresso outline-none transition focus:border-rose"
-                  placeholder="+375 ..."
-                />
+                <span className="mb-1.5 block font-body text-[11px] font-medium uppercase tracking-widest text-mink/70">Телефон</span>
+                <input value={form.phone}
+                  onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                  className="w-full rounded-xl border border-pink-100 bg-pink-50/40 px-4 py-2.5 font-body text-sm text-espresso outline-none transition focus:border-rose focus:bg-white"
+                  placeholder="+375 ..." />
               </label>
               <label className="block md:col-span-2">
-                <span className="mb-2 block font-body text-xs font-medium uppercase tracking-widest text-mink">
-                  Telegram
-                </span>
-                <input
-                  value={form.telegram}
-                  onChange={(event) => setForm((prev) => ({ ...prev, telegram: event.target.value }))}
-                  className="w-full rounded-2xl border border-sand bg-cream px-4 py-3 font-body text-sm text-espresso outline-none transition focus:border-rose"
-                  placeholder="@username"
-                />
+                <span className="mb-1.5 block font-body text-[11px] font-medium uppercase tracking-widest text-mink/70">Telegram</span>
+                <input value={form.telegram}
+                  onChange={(e) => setForm((p) => ({ ...p, telegram: e.target.value }))}
+                  className="w-full rounded-xl border border-pink-100 bg-pink-50/40 px-4 py-2.5 font-body text-sm text-espresso outline-none transition focus:border-rose focus:bg-white"
+                  placeholder="@username" />
               </label>
-              <p className="-mt-2 font-body text-xs leading-relaxed text-mink md:col-span-2">
-                Укажите телефон или Telegram — достаточно одного контакта для подтверждения записи.
+              <p className="-mt-1 font-body text-xs text-mink/50 md:col-span-2">
+                Достаточно одного контакта.
               </p>
+
               {needsPreferredContact && (
                 <fieldset className="md:col-span-2">
-                  <legend className="mb-3 block font-body text-xs font-medium uppercase tracking-widest text-mink">
-                    Как лучше связаться
-                  </legend>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {contactOptions.map((option) => {
-                      const checked = form.preferredContact === option.value;
-
+                  <legend className="mb-2 block font-body text-[11px] font-medium uppercase tracking-widest text-mink/70">Как лучше связаться</legend>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {contactOptions.map((opt) => {
+                      const checked = form.preferredContact === opt.value;
                       return (
-                        <label
-                          key={option.value}
-                          className={`flex cursor-pointer gap-3 rounded-3xl border p-4 transition-all ${
-                            checked
-                              ? "border-rose bg-blush/20"
-                              : "border-sand bg-cream hover:border-rose/70"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() =>
-                              setForm((prev) => ({ ...prev, preferredContact: option.value }))
-                            }
-                            className="mt-1 h-4 w-4 accent-rose"
-                          />
+                        <label key={opt.value}
+                          className={`flex cursor-pointer gap-3 rounded-2xl border p-3 transition-all ${checked ? "border-rose bg-rose/5" : "border-pink-100 bg-pink-50/50 hover:border-rose/50"}`}>
+                          <input type="checkbox" checked={checked}
+                            onChange={() => setForm((p) => ({ ...p, preferredContact: opt.value }))}
+                            className="mt-0.5 h-4 w-4 accent-rose" />
                           <span>
-                            <span className="block font-body text-sm font-semibold text-espresso">
-                              {option.label}
-                            </span>
-                            <span className="mt-1 block font-body text-xs leading-relaxed text-mink">
-                              {option.hint}
-                            </span>
+                            <span className="block font-body text-sm font-semibold text-espresso">{opt.label}</span>
+                            <span className="mt-0.5 block font-body text-xs text-mink/60">{opt.hint}</span>
                           </span>
                         </label>
                       );
@@ -584,42 +362,30 @@ export default function BookingCalendar() {
                   </div>
                 </fieldset>
               )}
+
               <label className="block md:col-span-2">
-                <span className="mb-2 block font-body text-xs font-medium uppercase tracking-widest text-mink">
-                  Комментарий
-                </span>
-                <textarea
-                  value={form.comment}
-                  onChange={(event) => setForm((prev) => ({ ...prev, comment: event.target.value }))}
-                  className="min-h-28 w-full rounded-2xl border border-sand bg-cream px-4 py-3 font-body text-sm text-espresso outline-none transition focus:border-rose"
-                  placeholder="Например: хочу загущение без сильного удлинения"
-                />
+                <span className="mb-1.5 block font-body text-[11px] font-medium uppercase tracking-widest text-mink/70">Комментарий</span>
+                <textarea value={form.comment}
+                  onChange={(e) => setForm((p) => ({ ...p, comment: e.target.value }))}
+                  className="min-h-20 w-full rounded-xl border border-pink-100 bg-pink-50/40 px-4 py-2.5 font-body text-sm text-espresso outline-none transition focus:border-rose focus:bg-white"
+                  placeholder="Например: хочу загущение без удлинения" />
               </label>
-              <label className="flex gap-3 rounded-3xl border border-sand bg-cream/80 p-4 md:col-span-2">
-                <input
-                  type="checkbox"
-                  checked={form.privacyAccepted}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, privacyAccepted: event.target.checked }))
-                  }
-                  className="mt-1 h-4 w-4 shrink-0 accent-rose"
-                />
-                <span className="font-body text-xs leading-relaxed text-mink">
-                  <span className="block font-semibold text-espresso">
-                    Согласие на обработку персональных данных
-                  </span>
-                  Согласна на обработку и хранение моих персональных данных по Закону Республики
-                  Беларусь от 07.05.2021 N 99-З "О защите персональных данных" для записи, связи
-                  по заявке и переноса времени при необходимости.
+
+              <label className="flex gap-3 rounded-2xl border border-pink-100 bg-pink-50/40 p-3 md:col-span-2">
+                <input type="checkbox" checked={form.privacyAccepted}
+                  onChange={(e) => setForm((p) => ({ ...p, privacyAccepted: e.target.checked }))}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-rose" />
+                <span className="font-body text-xs leading-relaxed text-mink/70">
+                  <span className="block font-semibold text-espresso mb-0.5">Согласие на обработку данных</span>
+                  Согласна на обработку персональных данных по Закону РБ от 07.05.2021 N 99-З для записи и связи по заявке.
                 </span>
               </label>
             </div>
 
-            <div className="mt-6 rounded-4xl bg-cream p-5">
-              <p className="font-body text-xs font-medium uppercase tracking-widest text-mink">
-                Вы выбрали
-              </p>
-              <p className="mt-2 font-body text-sm text-espresso">
+            {/* Summary */}
+            <div className="mt-5 rounded-2xl bg-pink-50/60 border border-pink-100 p-4">
+              <p className="font-body text-[11px] font-medium uppercase tracking-widest text-mink/60">Вы выбрали</p>
+              <p className="mt-1 font-body text-sm text-espresso">
                 {selectedService.title}
                 {selectedSlot ? ` · ${selectedSlot.date} · ${selectedSlot.time} · ${selectedSlot.city}` : ""}
               </p>
@@ -627,65 +393,47 @@ export default function BookingCalendar() {
 
             <AnimatePresence mode="wait">
               {submitState.status === "success" && (
-                <motion.div
-                  key="success"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="mt-5 rounded-4xl border border-sage/30 bg-sage/15 p-5"
-                >
-                  <p className="font-body font-semibold text-espresso">
-                    ✓ Заявка отправлена!
+                <motion.div key="ok" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  className="mt-4 rounded-2xl border border-rose/20 bg-rose/5 p-4">
+                  <p className="font-body font-semibold text-espresso">✓ Заявка отправлена!</p>
+                  <p className="mt-1 font-body text-sm text-mink">
+                    Анна скоро свяжется {submitState.preferredContact === "telegram" ? "в Telegram" : "по телефону"} и подтвердит запись.
                   </p>
-                  <p className="mt-2 font-body text-sm leading-relaxed text-mink">
-                    Анна скоро свяжется с вами{" "}
-                    {submitState.preferredContact === "telegram"
-                      ? "в Telegram"
-                      : "по телефону"}{" "}
-                    и подтвердит запись. Обычно это занимает не более нескольких часов.
-                  </p>
-                  <p className="mt-1 font-body text-xs text-mink/60">
-                    Номер заявки: {submitState.requestId}
-                  </p>
-                  <p className="mt-3 font-display text-lg italic text-rose">
-                    &ldquo;{submitState.quote}&rdquo;
-                  </p>
+                  <p className="mt-1 font-body text-xs text-mink/50">№ {submitState.requestId}</p>
+                  <p className="mt-2 font-display text-base italic text-rose">&ldquo;{submitState.quote}&rdquo;</p>
                 </motion.div>
               )}
-
               {submitState.status === "error" && (
-                <motion.p
-                  key="error"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="mt-5 rounded-3xl bg-rose/10 p-4 font-body text-sm text-espresso"
-                >
+                <motion.p key="err" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  className="mt-4 rounded-2xl bg-rose/8 p-3 font-body text-sm text-espresso border border-rose/20">
                   {submitState.message}
                 </motion.p>
               )}
             </AnimatePresence>
 
-            <button
-              type="submit"
+            <button type="submit"
               disabled={submitState.status === "loading" || slotsLoading}
-              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-espresso px-8 py-4 font-body font-medium text-cream transition-all hover:bg-rose disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-rose px-8 py-3.5 font-body font-medium text-white transition-all hover:bg-pink-500 disabled:cursor-not-allowed disabled:opacity-60 shadow-[0_8px_24px_rgba(236,72,153,0.25)]"
             >
-              {submitState.status === "loading" ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Отправляю
-                </>
-              ) : (
-                <>
-                  Отправить заявку
-                  <Send size={16} />
-                </>
-              )}
+              {submitState.status === "loading"
+                ? <><Loader2 className="h-4 w-4 animate-spin" />Отправляю…</>
+                : <><Send size={14} />Отправить заявку</>}
             </button>
           </motion.form>
         </div>
       </div>
     </section>
+  );
+}
+
+function StepLabel({ n, title, extra }: { n: string; title: string; extra?: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between w-full">
+      <div>
+        <p className="font-body text-[10px] font-medium uppercase tracking-widest text-rose">Шаг {n}</p>
+        <h3 className="font-display text-xl sm:text-2xl font-light text-espresso">{title}</h3>
+      </div>
+      {extra}
+    </div>
   );
 }
