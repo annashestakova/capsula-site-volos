@@ -95,6 +95,9 @@ export function getTelegramContactUrl(value: string) {
 
 export async function sendAdminBookingRequest(request: BookingRequest) {
   const contactUrl = getTelegramContactUrl(request.telegram);
+  // Deep link: клиентка кликает → бот сохраняет её chat_id привязанный к заявке
+  const botDeepLink = `https://t.me/haircapsula_bot?start=${request.id}`;
+
   const text = [
     "<b>Новая запись с сайта Volos Capsula</b>",
     "",
@@ -108,8 +111,9 @@ export async function sendAdminBookingRequest(request: BookingRequest) {
     `<b>Телефон:</b> ${escapeHtml(request.phone || "не указан")}`,
     `<b>Telegram:</b> ${escapeHtml(normalizeTelegramContact(request.telegram) || "не указан")}`,
     `<b>Удобнее связаться:</b> ${request.preferredContact === "phone" ? "по телефону" : "в Telegram"}`,
-    `<b>Согласие на обработку данных:</b> ${request.privacyAccepted ? "получено" : "нет"}`,
     request.comment ? `<b>Комментарий:</b> ${escapeHtml(request.comment)}` : "",
+    "",
+    "⚠️ Перешли клиентке ссылку «Подключить бот» — тогда уведомления придут автоматически.",
   ].filter(Boolean).join("\n");
 
   return telegramRequest("sendMessage", {
@@ -119,10 +123,11 @@ export async function sendAdminBookingRequest(request: BookingRequest) {
     reply_markup: {
       inline_keyboard: [
         [
-          { text: "Подтвердить", callback_data: `confirm:${request.id}` },
-          { text: "Перенести", callback_data: `move:${request.id}` },
+          { text: "✅ Подтвердить", callback_data: `confirm:${request.id}` },
+          { text: "⏳ Перенести", callback_data: `move:${request.id}` },
         ],
-        ...(contactUrl ? [[{ text: "Написать клиентке", url: contactUrl }]] : []),
+        [{ text: "🔔 Подключить бот клиентке", url: botDeepLink }],
+        ...(contactUrl ? [[{ text: "✉️ Написать клиентке", url: contactUrl }]] : []),
       ],
     },
   });

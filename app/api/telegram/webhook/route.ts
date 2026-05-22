@@ -56,7 +56,18 @@ export async function POST(request: Request) {
       await saveClientChatId(from.username.toLowerCase(), chat.id);
     }
 
-    if (text === "/start") {
+    if (text?.startsWith("/start")) {
+      // Если /start содержит booking_id — привязываем chat_id к заявке
+      const payload = text.slice(7).trim(); // всё после "/start "
+      if (payload) {
+        // payload = booking id, сохраняем chat_id по booking_id тоже
+        await saveClientChatId(`booking:${payload}`, chat.id);
+      }
+      // Сохраняем по username тоже (если есть)
+      if (from?.username) {
+        await saveClientChatId(from.username.toLowerCase(), chat.id);
+      }
+
       await sendMessage(
         chat.id,
         [
@@ -64,7 +75,7 @@ export async function POST(request: Request) {
           "",
           "Я бот студии <b>Volos Capsula</b> — наращивание волос в Бресте и Минске.",
           "",
-          "Здесь вы получите:",
+          "Вы подключены! Теперь вы будете получать:",
           "• Подтверждение вашей записи",
           "• Уведомление если нужен перенос",
           "",
@@ -149,17 +160,21 @@ export async function POST(request: Request) {
       "Нужно перенести дату. Свяжитесь с клиенткой.",
     );
 
-    // Уведомляем клиентку
     const username = normalizeTelegramContact(booking.telegram).replace("@", "").toLowerCase();
-    const clientChatId = username ? await getClientChatId(username) : null;
-
     const byPhone = booking.preferredContact === "phone";
-    const contactMethod = byPhone
-      ? `по телефону <b>${booking.phone || "из заявки"}</b>`
-      : `в Telegram <b>${normalizeTelegramContact(booking.telegram) || "из заявки"}</b>`;
 
+    // Ищем chat_id: сначала по booking deep link, потом по username
+    const clientChatId =
+      (await getClientChatId(`booking:${booking.id}`)) ??
+      (username ? await getClientChatId(username) : null);
+
+    const contactMethod = byPhone
+      ? `по телефону <b>${booking.phone || "—"}</b>`
+      : `в Telegram <b>${normalizeTelegramContact(booking.telegram) || "—"}</b>`;
+
+    let clientNotified = false;
     if (clientChatId) {
-      await sendMessage(
+      const res = await sendMessage(
         clientChatId,
         [
           "⏳ <b>Требуется перенос записи</b>",
@@ -171,25 +186,32 @@ export async function POST(request: Request) {
           "Приносим извинения за неудобство 🙏",
         ].join("\n"),
       );
+      clientNotified = res.ok;
     }
 
-    // Кнопки для связи с клиенткой у админа
+    // Кнопки для связи у админа (всегда показываем — как запасной вариант)
     const contactUrl = byPhone
       ? `tel:${booking.phone}`
       : username
         ? `https://t.me/${username}`
         : null;
-    const contactLabel = byPhone ? `📞 Позвонить ${booking.phone}` : "✉️ Написать клиентке →";
+    const contactLabel = byPhone
+      ? `📞 Позвонить ${booking.phone}`
+      : "✉️ Написать клиентке →";
 
-    await answerTelegramCallback(cb.id, "Клиентка уведомлена о переносе.");
+    const statusText = clientNotified
+      ? "⏳ Нужно перенести — клиентка уведомлена в боте"
+      : "⏳ Нужно перенести — клиентка не в боте, свяжитесь вручную";
+
+    await answerTelegramCallback(cb.id, clientNotified ? "Клиентка уведомлена ✅" : "Свяжитесь с клиенткой вручную");
     await editAdminBookingMessage(
       cb.message.chat.id,
       cb.message.message_id,
-      formatAdminStatusMessage(updated ?? booking, "⏳ Нужно перенести запись"),
+      formatAdminStatusMessage(updated ?? booking, statusText),
       contactUrl ? [[{ text: contactLabel, url: contactUrl }]] : [],
     );
 
-    return NextResponse.json({ ok: true, handled: true });
+    return NextResponse.json({ ok: true, handled: true, clientNotified });
   }
 
   await answerTelegramCallback(cb.id, "Команда не распознана.");
