@@ -1,6 +1,31 @@
 import type { BookingRequest } from "@/lib/booking";
 import { getBeautyQuote } from "@/lib/booking";
 
+/* ── Redis helpers для хранения chat_id клиентов ── */
+async function redisKV(command: unknown[]) {
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  if (!url || !token) return null;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(command),
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { result?: unknown };
+  return data.result ?? null;
+}
+
+export async function saveClientChatId(username: string, chatId: number) {
+  await redisKV(["SET", `tg:chatid:${username}`, String(chatId), "EX", 60 * 60 * 24 * 365]);
+}
+
+export async function getClientChatId(username: string): Promise<number | null> {
+  const val = await redisKV(["GET", `tg:chatid:${username}`]);
+  return val ? Number(val) : null;
+}
+
 type TelegramResponse<T> = {
   ok: boolean;
   result?: T;
@@ -138,12 +163,14 @@ export async function editAdminBookingMessage(
   chatId: number | string,
   messageId: number,
   text: string,
+  extraButtons: Array<Array<{ text: string; url: string }>> = [],
 ) {
   return telegramRequest("editMessageText", {
     chat_id: chatId,
     message_id: messageId,
     text,
     parse_mode: "HTML",
+    reply_markup: extraButtons.length > 0 ? { inline_keyboard: extraButtons } : undefined,
   });
 }
 

@@ -4,7 +4,9 @@ import {
   answerTelegramCallback,
   editAdminBookingMessage,
   formatAdminStatusMessage,
-  sendClientBookingConfirmation,
+  normalizeTelegramContact,
+  saveClientChatId,
+  getClientChatId,
 } from "@/lib/telegram";
 
 export const dynamic = "force-dynamic";
@@ -12,129 +14,184 @@ export const dynamic = "force-dynamic";
 type TelegramUpdate = {
   message?: {
     text?: string;
-    chat: {
-      id: number | string;
-      first_name?: string;
-    };
+    chat: { id: number; first_name?: string };
+    from?: { username?: string };
   };
   callback_query?: {
     id: string;
     data?: string;
     message?: {
       message_id: number;
-      chat: {
-        id: number | string;
-      };
+      chat: { id: number | string };
     };
   };
 };
 
-async function sendTelegramMessage(chatId: number | string, text: string) {
+async function sendMessage(
+  chatId: number | string,
+  text: string,
+  extra?: Record<string, unknown>,
+) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) return;
-
-  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+  if (!token) return { ok: false };
+  const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text,
-      parse_mode: "HTML",
-    }),
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML", ...extra }),
     cache: "no-store",
   });
+  return res.json() as Promise<{ ok: boolean }>;
 }
 
 export async function POST(request: Request) {
   const update = (await request.json().catch(() => null)) as TelegramUpdate | null;
+  if (!update) return NextResponse.json({ ok: true });
 
-  if (!update) {
-    return NextResponse.json({ ok: true });
-  }
-
-  /* ── /start и другие сообщения ── */
+  /* ── Входящие сообщения ── */
   if (update.message?.text) {
-    const { chat, text } = update.message;
+    const { chat, text, from } = update.message;
+
+    // Сохраняем chat_id по username чтобы потом писать клиентке
+    if (from?.username) {
+      await saveClientChatId(from.username.toLowerCase(), chat.id);
+    }
 
     if (text === "/start") {
-      await sendTelegramMessage(
+      await sendMessage(
         chat.id,
         [
           `Привет${chat.first_name ? `, ${chat.first_name}` : ""}! 👋`,
           "",
           "Я бот студии <b>Volos Capsula</b> — наращивание волос в Бресте и Минске.",
           "",
-          "Через меня вы получите:",
-          "• Подтверждение записи с сайта",
-          "• Напоминания о визите",
-          "• Связь с мастером",
+          "Здесь вы получите:",
+          "• Подтверждение вашей записи",
+          "• Уведомление если нужен перенос",
           "",
-          "📌 Записаться: <b>capssula.by</b>",
-          "📞 Вопросы: @volos_capsula",
+          "📌 Записаться на сайте: <b>capssula.by</b>",
         ].join("\n"),
       );
       return NextResponse.json({ ok: true, handled: true });
     }
 
-    /* Любое другое сообщение */
-    await sendTelegramMessage(
+    await sendMessage(
       chat.id,
-      "Для записи перейдите на сайт: capssula.by\nИли напишите нам: @volos_capsula",
+      "Для записи на наращивание перейдите на сайт: <b>capssula.by</b>",
     );
     return NextResponse.json({ ok: true, handled: true });
   }
 
-  /* ── Callback кнопки (подтвердить / перенести) ── */
-  const callback = update.callback_query;
+  /* ── Callback кнопки ── */
+  const cb = update.callback_query;
+  if (!cb?.data || !cb.message) return NextResponse.json({ ok: true });
 
-  if (!callback?.data || !callback.message) {
-    return NextResponse.json({ ok: true });
-  }
-
-  const [action, bookingId] = callback.data.split(":");
+  const [action, bookingId] = cb.data.split(":");
   const booking = bookingId ? await getBookingRequest(bookingId) : null;
 
   if (!booking) {
-    await answerTelegramCallback(callback.id, "Заявка не найдена.");
+    await answerTelegramCallback(cb.id, "Заявка не найдена.");
     return NextResponse.json({ ok: true, handled: false });
   }
 
+  /* ── ПОДТВЕРДИТЬ ── */
   if (action === "confirm") {
     const confirmed = await confirmBookingRequest(booking.id);
-
     if (!confirmed) {
-      await answerTelegramCallback(callback.id, "Не удалось подтвердить заявку.");
+      await answerTelegramCallback(cb.id, "Не удалось подтвердить.");
       return NextResponse.json({ ok: true, handled: false });
     }
 
-    await answerTelegramCallback(callback.id, "Запись подтверждена.");
-    await sendClientBookingConfirmation(confirmed);
+    // Пробуем написать клиентке в бот по сохранённому chat_id
+    const username = normalizeTelegramContact(confirmed.telegram).replace("@", "").toLowerCase();
+    const clientChatId = username ? await getClientChatId(username) : null;
+
+    let clientNotified = false;
+    if (clientChatId) {
+      const result = await sendMessage(
+        clientChatId,
+        [
+          "✅ <b>Ваша запись подтверждена!</b>",
+          "",
+          `📅 ${confirmed.date} в ${confirmed.time}`,
+          `💆 Услуга: ${confirmed.serviceTitle}`,
+          `📍 Город: ${confirmed.city}`,
+          "",
+          "Ждём вас! Если возникнут вопросы — пишите сюда.",
+        ].join("\n"),
+      );
+      clientNotified = result.ok;
+    }
+
+    await answerTelegramCallback(cb.id, "Запись подтверждена ✅");
+
+    // Обновляем сообщение у админа
+    const contactUrl = username ? `https://t.me/${username}` : null;
     await editAdminBookingMessage(
-      callback.message.chat.id,
-      callback.message.message_id,
-      formatAdminStatusMessage(confirmed, "Запись подтверждена"),
+      cb.message.chat.id,
+      cb.message.message_id,
+      formatAdminStatusMessage(
+        confirmed,
+        clientNotified
+          ? "✅ Запись подтверждена — клиентке отправлено уведомление в бот"
+          : "✅ Запись подтверждена — клиентка не запускала бот, напишите вручную",
+      ),
+      clientNotified ? [] : contactUrl ? [[{ text: "Написать клиентке →", url: contactUrl }]] : [],
     );
 
-    return NextResponse.json({ ok: true, handled: true, status: "confirmed" });
+    return NextResponse.json({ ok: true, handled: true, clientNotified });
   }
 
+  /* ── ПЕРЕНЕСТИ ── */
   if (action === "move") {
     const updated = await updateBookingStatus(
       booking.id,
       "reschedule_requested",
-      "Админ выбрал перенос даты. Нужно связаться с клиенткой.",
+      "Нужно перенести дату. Свяжитесь с клиенткой.",
     );
 
-    await answerTelegramCallback(callback.id, "Свяжитесь с клиенткой для переноса.");
+    // Уведомляем клиентку
+    const username = normalizeTelegramContact(booking.telegram).replace("@", "").toLowerCase();
+    const clientChatId = username ? await getClientChatId(username) : null;
+
+    const byPhone = booking.preferredContact === "phone";
+    const contactMethod = byPhone
+      ? `по телефону <b>${booking.phone || "из заявки"}</b>`
+      : `в Telegram <b>${normalizeTelegramContact(booking.telegram) || "из заявки"}</b>`;
+
+    if (clientChatId) {
+      await sendMessage(
+        clientChatId,
+        [
+          "⏳ <b>Требуется перенос записи</b>",
+          "",
+          `Ваша запись на ${booking.date} в ${booking.time} нуждается в переносе.`,
+          "",
+          `Мастер свяжется с вами в течение <b>10 минут</b> ${contactMethod}.`,
+          "",
+          "Приносим извинения за неудобство 🙏",
+        ].join("\n"),
+      );
+    }
+
+    // Кнопки для связи с клиенткой у админа
+    const contactUrl = byPhone
+      ? `tel:${booking.phone}`
+      : username
+        ? `https://t.me/${username}`
+        : null;
+    const contactLabel = byPhone ? `📞 Позвонить ${booking.phone}` : "✉️ Написать клиентке →";
+
+    await answerTelegramCallback(cb.id, "Клиентка уведомлена о переносе.");
     await editAdminBookingMessage(
-      callback.message.chat.id,
-      callback.message.message_id,
-      formatAdminStatusMessage(updated ?? booking, "Нужно перенести запись"),
+      cb.message.chat.id,
+      cb.message.message_id,
+      formatAdminStatusMessage(updated ?? booking, "⏳ Нужно перенести запись"),
+      contactUrl ? [[{ text: contactLabel, url: contactUrl }]] : [],
     );
 
-    return NextResponse.json({ ok: true, handled: true, status: "reschedule_requested" });
+    return NextResponse.json({ ok: true, handled: true });
   }
 
-  await answerTelegramCallback(callback.id, "Команда не распознана.");
+  await answerTelegramCallback(cb.id, "Команда не распознана.");
   return NextResponse.json({ ok: true, handled: false });
 }
